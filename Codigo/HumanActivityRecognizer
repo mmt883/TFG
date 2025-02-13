@@ -1,0 +1,103 @@
+import numpy as np
+import re
+from collections import defaultdict, Counter
+
+# Acceleration al sol, Proximity al sol
+
+class HumanActivityRecognizer:
+    def __init__(self):
+        self.automata = {}
+        self.regular_expressions = {}
+        self.activity_maps = {}
+
+    def filter_data(self, sensor_data, floor_data):
+        """Filtrar datos ruidosos e inconsistentes."""
+        filtered_data = []
+        for entry in sensor_data:
+            if self.is_valid_entry(entry, floor_data):
+                filtered_data.append(entry)
+        return filtered_data
+
+    def is_valid_entry(self, entry, floor_data):
+        """Verificar si una entrada de datos es válida."""
+        # Implementar lógica basada en reglas específicas del artículo
+        return True
+
+    def train_automata(self, training_data):
+        """Entrenar autómatas finitos ponderados basados en actividades."""
+        for time_of_day, activities in training_data.items():
+            automaton = self.build_weighted_automaton(activities)
+            self.automata[time_of_day] = automaton
+
+    def build_weighted_automaton(self, activities):
+        """Construir un autómata finito ponderado."""
+        automaton = defaultdict(Counter)
+        for activity_sequence in activities:
+            for i in range(len(activity_sequence) - 1):
+                automaton[activity_sequence[i]][activity_sequence[i + 1]] += 1
+        return automaton
+
+    def generate_regular_expressions(self, activity_data):
+        """Generar expresiones regulares para actividades específicas."""
+        for activity, sequences in activity_data.items():
+            regex = self.build_regex(sequences)
+            self.regular_expressions[activity] = regex
+
+    def build_regex(self, sequences):
+        """Construir una expresión regular a partir de secuencias."""
+        # Convertir cada lista de la secuencia en una cadena
+        sequences_as_strings = ["".join(seq) for seq in sequences]
+        # Combinar las cadenas resultantes con '|'
+        return "|".join(sequences_as_strings)
+    
+    def predict(self, test_data):
+        """Predecir actividades en datos de prueba."""
+        predictions = []
+        for sequence in test_data:
+            predictions.append(self.match_sequence(sequence))
+        return predictions
+
+    def match_sequence(self, sequence):
+        """Intentar emparejar una secuencia con un autómata y regex."""
+        for activity, regex in self.regular_expressions.items():
+            if re.match(regex, sequence):
+                return activity
+        return None
+
+    def adjust_timestamps(self, activity_flow, floor_data):
+        """Ajustar tiempos de inicio y fin usando datos espaciales."""
+        adjusted_flow = []
+        for activity, start, end in activity_flow:
+            adjusted_start, adjusted_end = self.refine_times(activity, start, end, floor_data)
+            adjusted_flow.append((activity, adjusted_start, adjusted_end))
+        return adjusted_flow
+
+    def refine_times(self, activity, start, end, floor_data):
+        """Refinar tiempos usando datos espaciales."""
+        # Implementar lógica para ajustar tiempos
+        return start, end
+
+
+# Ejemplo de uso:
+if __name__ == "__main__":
+    recognizer = HumanActivityRecognizer()
+
+    # Cargar datos de entrenamiento y prueba (simulados aquí como listas/diccionarios)
+    training_data = {
+        "morning": [["Act24", "Act18", "Act16", "Act02", "Act05"]],
+        "afternoon": [["Act10", "Act03", "Act06", "Act17"]],
+        "evening": [["Act10", "Act04", "Act07", "Act23"]]
+    }
+    activity_data = {
+        "Act15": [["C01", "C08", "M01"], ["C08", "C08", "M01"]],
+        "Act16": [["C09"]]
+    }
+    test_data = [["C09", "C09", "M01", "C08", "C08", "M01"]]
+
+    # Entrenamiento
+    recognizer.train_automata(training_data)
+    recognizer.generate_regular_expressions(activity_data)
+
+    # Predicción
+    predictions = recognizer.predict(test_data)
+    print("Predicciones:", predictions)
