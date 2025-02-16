@@ -1,6 +1,10 @@
 import csv
 import os
 from datetime import datetime
+import networkx as nx
+import matplotlib.pyplot as plt
+
+
 
 # Ejemplo de uso:
 
@@ -104,9 +108,9 @@ def subdividir_datos(datos, nombre_columna):
 # Ejemplo de uso
 # sensores = 'C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-sensors.csv'  
 # actividades = 'C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-activity.csv'
-sensores = 'C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-sensors.csv'  
-actividades = 'C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-activity.csv'
-nombre_columna = 'TIMESTAMP'  
+# sensores = 'C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-sensors.csv'  
+# actividades = 'C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-activity.csv'
+# nombre_columna = 'TIMESTAMP'  
 
 # Leer los valores
 # horas_inicio = subdividir_datos(leer_todas_columnas_csv(actividades), 'DATE BEGIN')
@@ -231,3 +235,95 @@ carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/
 recorrer_carpetas(carpeta_base, dictAct)
 for key, value in dictAct.items():
     print(f"{key}: {len(value)}")
+
+
+
+def construir_automata(secuencias):
+    G = nx.DiGraph()
+    
+    for secuencia in secuencias:
+        for i in range(len(secuencia) - 1):
+            origen = secuencia[i]
+            destino = secuencia[i + 1]
+            if G.has_edge(origen, destino):
+                G[origen][destino]['weight'] += 1
+            else:
+                G.add_edge(origen, destino, weight=1)
+    
+    return G
+
+def calcular_probabilidades(G):
+    for nodo in G.nodes:
+        total_salidas = sum(G[nodo][vecino]['weight'] for vecino in G.successors(nodo))
+        for vecino in G.successors(nodo):
+            G[nodo][vecino]['label'] = f"{G[nodo][vecino]['weight']}/{total_salidas}"
+
+def dibujar_automata(G):
+    pos = nx.spring_layout(G, seed=5)  # Para un layout estable
+    labels = {edge: G[edge[0]][edge[1]]['label'] for edge in G.edges}
+    
+    plt.figure(figsize=(10, 6))
+    nx.draw(G, pos, with_labels=True, node_color='lightgray', edge_color='black', node_size=2000, font_size=10)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+    plt.show()
+
+
+secuenciaMañana, secuenciaTarde, secuenciaNoche = [], [], []
+
+def generaSecuencias(base_path, secuenciaMañana, secuenciaTarde, secuenciaNoche):
+    if not os.path.exists(base_path):
+        print(f"Error: La carpeta '{base_path}' no existe.")
+        return
+    
+    for carpeta_actual, _, archivos in os.walk(base_path):
+        print(f"Entrando en carpeta: {carpeta_actual}")
+
+        rutaAct =""
+
+        if not archivos:
+            print(f"No se encontraron archivos en {carpeta_actual}")
+
+        for archivo in archivos:
+            if archivo.endswith(".csv"):  # Solo considerar archivos CSV
+                archivo_lower = archivo.lower()  # Convertir a minúsculas
+                ruta_completa = os.path.normpath(os.path.join(carpeta_actual, archivo_lower))
+                print(f"Procesando archivo: {ruta_completa}")
+                
+                # Comprobación del nombre del archivo
+                if "activity" in archivo:
+                    rutaAct = ruta_completa
+                else:
+                    print(f"Omitiendo archivo: {ruta_completa}")
+        if rutaAct:
+            print(f"\nArchivos emparejados:\n - Activity: {rutaAct}\n")
+            procesar_secuencias(rutaAct, secuenciaMañana, secuenciaTarde, secuenciaNoche)
+
+    # print(len(secuenciaMañana))
+    # print(len(secuenciaTarde))   
+    # print(len(secuenciaNoche))       
+    grafoMañana = construir_automata(secuenciaMañana)
+    calcular_probabilidades(grafoMañana)
+    dibujar_automata(grafoMañana)
+
+    grafoTarde = construir_automata(secuenciaTarde)
+    calcular_probabilidades(grafoTarde)
+    dibujar_automata(grafoTarde)
+
+    grafoNoche = construir_automata(secuenciaNoche)
+    calcular_probabilidades(grafoNoche)
+    dibujar_automata(grafoNoche)
+
+    return grafoMañana, grafoTarde, grafoNoche
+
+
+def procesar_secuencias(ruta_Act, secuenciaMañana, secuenciaTarde, secuenciaNoche):
+    act = subdividir_datos(leer_todas_columnas_csv(ruta_Act), 'ACTIVITY')
+   
+    if "b-activity" in ruta_Act:
+        secuenciaTarde.append(act)
+    elif "c-activity" in ruta_Act:
+        secuenciaNoche.append(act)
+    else:
+        secuenciaMañana.append(act)
+
+grafoMañana, grafoTarde, grafoNoche = generaSecuencias(carpeta_base, secuenciaMañana, secuenciaTarde, secuenciaNoche)
