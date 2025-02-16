@@ -1,8 +1,8 @@
-import csv
 import os
 from datetime import datetime
 import networkx as nx
 import matplotlib.pyplot as plt
+from LecturasCSV import leer_todas_columnas_csv, subdividir_datos, leer_columna_csv
 
 
 
@@ -11,112 +11,6 @@ import matplotlib.pyplot as plt
 #Objetivo leer datos de csv y ir dividiendo segun hora inicial y final acorde a actividades
 #Tenemos varios csv con datos: Date begin, Date End, Activity, Habitant
 #Y otros con: TimeStamp, Object, State, Habitant
-
-# Función para leer una columna específica de un archivo CSV
-def leer_columna_csv(ruta_archivo, nombre_columna):
-    """
-    Lee una columna específica de un archivo CSV y devuelve una lista con los valores de esa columna.
-
-    :param ruta_archivo: Ruta del archivo CSV.
-    :param nombre_columna: Nombre de la columna que se desea leer.
-    :return: Lista con los valores de la columna especificada.
-    """
-    if not os.path.exists(ruta_archivo):
-        raise FileNotFoundError(f"El archivo '{ruta_archivo}' no existe.")
-
-    valores_columna = []
-
-    try:
-        with open(ruta_archivo, mode='r', newline='', encoding='utf-8') as archivo_csv:
-            lector_csv = csv.DictReader(archivo_csv, delimiter=';')
-
-            # Verificar si la columna existe en el archivo CSV
-            if nombre_columna not in lector_csv.fieldnames:
-                print(lector_csv.fieldnames)
-                raise ValueError(f"La columna '{nombre_columna}' no existe en el archivo CSV.")
-
-            # Leer y almacenar los valores
-            for fila in lector_csv:
-                valores_columna.append(fila[nombre_columna])
-
-    except Exception as e:
-        print(f"Error al leer el archivo CSV: {e}")
-        return []
-
-    return valores_columna
-
-def leer_todas_columnas_csv(ruta_archivo):
-    """
-    Lee todas las columnas de un archivo CSV y devuelve un diccionario con los datos.
-
-    :param ruta_archivo: Ruta del archivo CSV.
-    :return: Diccionario con los nombres de las columnas como claves y listas de valores como valores.
-    """
-    if not os.path.exists(ruta_archivo):
-        raise FileNotFoundError(f"El archivo '{ruta_archivo}' no existe.")
-
-    datos = {}
-
-    try:
-        with open(ruta_archivo, mode='r', newline='', encoding='utf-8') as archivo_csv:
-            lector_csv = csv.DictReader(archivo_csv, delimiter=';')
-
-            # Inicializar listas para cada columna
-            for nombre_columna in lector_csv.fieldnames:
-                datos[nombre_columna] = []
-
-            # Leer y almacenar los valores
-            for fila in lector_csv:
-                for nombre_columna in lector_csv.fieldnames:
-                    datos[nombre_columna].append(fila[nombre_columna])
-
-    except Exception as e:
-        print(f"Error al leer el archivo CSV: {e}")
-        return {}
-
-    return datos
-
-# Ejemplo de uso
-# ruta_archivo = 'C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-sensors.csv'
-# datos_csv = leer_todas_columnas_csv(ruta_archivo)
-
-# Imprimir las primeras 5 filas de cada columna para verificar
-# for columna, valores in datos_csv.items():
-#     print(f"{columna}: {valores[:5]}")
-
-# Función para subdividir los datos según una columna específica
-def subdividir_datos(datos, nombre_columna):
-    """
-    Subdivide los datos en función de los valores de una columna específica.
-
-    :param datos: Diccionario con los datos del CSV.
-    :param nombre_columna: Nombre de la columna según la cual subdividir los datos.
-    :return: Lista con los valores de la columna especificada en el orden original.
-    """
-    return datos[nombre_columna]
-
-# Ejemplo de subdivisión de datos
-# nombre_columna_para_subdividir = 'TIMESTAMP'  # Reemplazar con el nombre real de la columna
-# subdivisiones = subdividir_datos(datos_csv, nombre_columna_para_subdividir)
-
-# Imprimir las subdivisiones para verificar
-# for valor, subdatos in subdivisiones.items():
-#     print(f"Valor: {valor}")
-#     for columna, valores in subdatos.items():
-#         print(f"  {columna}: {valores[:5]}")
-
-# Ejemplo de uso
-# sensores = 'C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-sensors.csv'  
-# actividades = 'C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-activity.csv'
-# sensores = 'C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-sensors.csv'  
-# actividades = 'C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/2017-10-31/2017-10-31-A/2017-10-31-A-activity.csv'
-# nombre_columna = 'TIMESTAMP'  
-
-# Leer los valores
-# horas_inicio = subdividir_datos(leer_todas_columnas_csv(actividades), 'DATE BEGIN')
-# horas_fin = subdividir_datos(leer_todas_columnas_csv(actividades), 'DATE END')
-# act = subdividir_datos(leer_todas_columnas_csv(actividades), 'ACTIVITY')
-# valores = leer_todas_columnas_csv(sensores)
 
 # OBJETIVO A SIGUIENTE:
 # ALMACENAR TODOS LOS SENSORES DE UNA ACTIVIDAD, filtrando segun hora inicial y final y
@@ -130,6 +24,7 @@ def inicializarDict():
     return dictAct
 
 dictAct = inicializarDict()
+dictSec = inicializarDict()
 
 
 
@@ -166,12 +61,7 @@ def filtrar_sensores_por_actividad(valores, horas_inicio, horas_fin, act, dictAc
         dictAct[actividad_nombre].append(sensorActividad)
         print("Se ha añadido la actividad: "+actividad_nombre)
 
-# Filtrar los valores de los sensores por actividad
-# filtrar_sensores_por_actividad(valores, horas_inicio, horas_fin, act, dictAct)
 
-# print(dictAct)
-# Imprimir las primeras 5 filas para verificar
-#print(valores)  # Muestra solo las primeras 5 líneas
 
 
 
@@ -298,9 +188,7 @@ def generaSecuencias(base_path, secuenciaMañana, secuenciaTarde, secuenciaNoche
             print(f"\nArchivos emparejados:\n - Activity: {rutaAct}\n")
             procesar_secuencias(rutaAct, secuenciaMañana, secuenciaTarde, secuenciaNoche)
 
-    # print(len(secuenciaMañana))
-    # print(len(secuenciaTarde))   
-    # print(len(secuenciaNoche))       
+      
     grafoMañana = construir_automata(secuenciaMañana)
     calcular_probabilidades(grafoMañana)
     dibujar_automata(grafoMañana)
@@ -327,3 +215,44 @@ def procesar_secuencias(ruta_Act, secuenciaMañana, secuenciaTarde, secuenciaNoc
         secuenciaMañana.append(act)
 
 grafoMañana, grafoTarde, grafoNoche = generaSecuencias(carpeta_base, secuenciaMañana, secuenciaTarde, secuenciaNoche)
+
+def construir_automata_actividades(secuencias):
+    G = nx.DiGraph()
+    
+    for secuencia in secuencias:
+        historial = "[]"  # Nodo inicial vacío
+        if historial not in G:
+            G.add_node(historial)
+        
+        for sensor in secuencia:
+            nuevo_nodo = f"{historial[:-1]} {sensor}]" if historial != "[]" else f"[{sensor}]"
+            if not G.has_node(nuevo_nodo):
+                G.add_node(nuevo_nodo)
+            
+            if G.has_edge(historial, nuevo_nodo):
+                G[historial][nuevo_nodo]['weight'] += 1
+            else:
+                G.add_edge(historial, nuevo_nodo, weight=1, label=sensor)  # Guardar sensor como etiqueta
+            
+            historial = nuevo_nodo
+    
+    return G
+
+def dibujar_automata_actividades(G, titulo):
+    pos = nx.spring_layout(G, seed=5)  # Para un layout estable
+    labels = {edge: G[edge[0]][edge[1]]['label'] for edge in G.edges}
+    plt.figure(figsize=(12, 8))
+    plt.title(titulo)
+    nx.draw(G, pos, with_labels=True, node_color='lightgray', edge_color='black', node_size=2000, font_size=8)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+    plt.show()
+
+def generaAutomataActividades(dictAct, dictSec):
+    for key, value in dictAct.items():
+        print(f"Actividad: {key}")
+        dictSec[key] = construir_automata_actividades(value)
+        
+
+generaAutomataActividades(dictAct, dictSec)
+for key in dictSec.keys():
+    dibujar_automata_actividades(dictSec[key], key)
