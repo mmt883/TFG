@@ -1,7 +1,6 @@
 import os
 import csv
 
-# Función para leer una columna específica de un archivo CSV
 def leer_columna_csv(ruta_archivo, nombre_columna):
     """
     Lee una columna específica de un archivo CSV y devuelve una lista con los valores de esa columna.
@@ -65,7 +64,6 @@ def leer_todas_columnas_csv(ruta_archivo):
 
     return datos
 
-# Función para subdividir los datos según una columna específica
 def subdividir_datos(datos, nombre_columna):
     """
     Subdivide los datos en función de los valores de una columna específica.

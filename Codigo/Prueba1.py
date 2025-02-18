@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 import networkx as nx
 import matplotlib.pyplot as plt
-from LecturasCSV import leer_todas_columnas_csv, subdividir_datos, leer_columna_csv
+from LecturasCSV import leer_todas_columnas_csv, leer_columna_csv
 
 
 
@@ -66,9 +66,9 @@ def procesar_archivo_csv(ruta_Act, ruta_Sen, dictAct):
      
     # Para los archivos de actividades recogemos las horas de inicio y fin y el nombre de cada actividad
     print(f"Ejecutando acción para tipo A en {ruta_Act}")
-    horas_inicio = subdividir_datos(leer_todas_columnas_csv(ruta_Act), 'DATE BEGIN')
-    horas_fin = subdividir_datos(leer_todas_columnas_csv(ruta_Act), 'DATE END')
-    act = subdividir_datos(leer_todas_columnas_csv(ruta_Act), 'ACTIVITY')
+    horas_inicio = leer_columna_csv(ruta_Act, 'DATE BEGIN')
+    horas_fin = leer_columna_csv(ruta_Act, 'DATE END')
+    act = leer_columna_csv(ruta_Act, 'ACTIVITY')
    
     # Para los archivos de sensores recogemos toda la tabla
     print(f"Ejecutando acción para tipo B en {ruta_Sen}")
@@ -233,7 +233,7 @@ def procesar_secuencias(ruta_Act, secuenciaMañana, secuenciaTarde, secuenciaNoc
     :param secuenciaTarde: Lista de secuencias de actividades de la tarde.
     :param secuenciaNoche: Lista de secuencias de actividades de la noche.
     """
-    act = subdividir_datos(leer_todas_columnas_csv(ruta_Act), 'ACTIVITY') # Extraer las actividades del archivo
+    act = leer_columna_csv(ruta_Act, 'ACTIVITY') # Extraer las actividades del archivo
    
     # Filtrar las actividades según su horario y se añaden a la secuencia correspondiente
     if "b-activity" in ruta_Act:
@@ -284,8 +284,8 @@ def generaAutomataActividades(dictAct, dictSec):
         dictSec[key] = construir_automata_actividades(value)
 
 
-carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
-# carpeta_base = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+# carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+carpeta_base = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
 
 dictAct = inicializarDict()
 dictSec = inicializarDict()
