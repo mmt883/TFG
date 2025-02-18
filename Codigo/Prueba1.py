@@ -121,7 +121,8 @@ def recorrer_carpetas(base_path, dictAct):
             procesar_archivo_csv(rutaAct, rutaSen, dictAct)
 
 # Ejecutar la función con la carpeta base
-carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+# carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+carpeta_base = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
 recorrer_carpetas(carpeta_base, dictAct)
 for key, value in dictAct.items():
     print(f"{key}: {len(value)}")
