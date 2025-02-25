@@ -27,7 +27,6 @@ def inicializarDict():
         dictAct[f"Act{i:02d}"] = []  # Formato con dos dígitos
     return dictAct
 
-
 def filtrar_sensores_por_actividad(valores, horas_inicio, horas_fin, act, dictAct):
     """
     Filtra los valores de los sensores según la hora de inicio y final de cada actividad y los almacena en un diccionario.
@@ -54,7 +53,6 @@ def filtrar_sensores_por_actividad(valores, horas_inicio, horas_fin, act, dictAc
         dictAct[actividad_nombre].append(sensorActividad) #Añadimos la lista de sensores de la actividad al diccionario con la key de la actividad
         print("Se ha añadido la actividad: "+actividad_nombre)
 
-
 def procesar_archivo_csv(ruta_Act, ruta_Sen, dictAct):
     """
     Procesa un archivo CSV según su tipo.
@@ -75,7 +73,6 @@ def procesar_archivo_csv(ruta_Act, ruta_Sen, dictAct):
     valores = leer_todas_columnas_csv(ruta_Sen)
 
     filtrar_sensores_por_actividad(valores, horas_inicio, horas_fin, act, dictAct)
-
 
 def recorrer_carpetas(base_path, dictAct):
     """
@@ -223,7 +220,6 @@ def generaSecuencias(base_path, secuenciaMañana, secuenciaTarde, secuenciaNoche
 
     return grafoMañana, grafoTarde, grafoNoche
 
-
 def procesar_secuencias(ruta_Act, secuenciaMañana, secuenciaTarde, secuenciaNoche):
     """
     Procesa un archivo CSV de actividades según su horario.
@@ -278,14 +274,77 @@ def construir_automata_actividades(secuencias):
     
     return G
 
+# def generaAutomataActividades(dictAct, dictSec):
+#     for key, value in dictAct.items():
+#         print(f"Actividad: {key}")
+#         dictSec[key] = construir_automata_actividades(value)
+
+def es_sensor_SM(sensor):
+    """
+    Verifica si un sensor es del tipo 'SM'.
+    
+    :param sensor: Nombre del sensor.
+    :return: True si el sensor empieza por 'SM', False en caso contrario.
+    """
+    return sensor.startswith("SM")
+
 def generaAutomataActividades(dictAct, dictSec):
+    """
+    Genera un autómata para cada actividad, eliminando los sensores que empiezan por 'SM' si es posible.
+
+    :param dictAct: Diccionario con las listas de sensores de cada actividad.
+    :param dictSec: Diccionario que recogerá un automata con los sensores de cada actividad.
+    """
+
     for key, value in dictAct.items():
-        print(f"Actividad: {key}")
-        dictSec[key] = construir_automata_actividades(value)
+        print(f"Procesando actividad: {key}")
+
+        # Verificar si existe al menos un sensor NO SM en alguna lista
+        existe_sensor_no_sm = any(
+            any(not es_sensor_SM(sensor) for sensor in lista) for lista in value
+        )
+
+        if existe_sensor_no_sm:
+            # Si hay algún sensor distinto de "SM...", eliminamos todos los "SM..."
+            sensores_a_eliminar = {sensor for lista in value for sensor in lista if es_sensor_SM(sensor)}
+
+            # Guardamos los sensores eliminados en dictSec
+            dictSec[key] = list(sensores_a_eliminar)
+
+            # Eliminamos sensores SM de cada sublista en dictAct
+            value2 = []
+            for lista in value:
+                lista2 = lista.copy()
+                lista2[:] = [sensor for sensor in lista2 if sensor not in sensores_a_eliminar]
+                value2.append(lista2)
+        else:
+            # Si todos los sensores son "SM...", no eliminamos nada
+            value2 = value.copy()
+            
+        dictSec[key] = construir_automata_actividades(value2)  # No se eliminó ningún sensor
+
+# def minimizar_automatas_RPNI(dictSec):
+#     """
+#     Minimiza los autómatas de las actividades con el algoritmo RPNI.
+
+#     Intento de Fusión de Estados: Se prueba combinar estados del autómata, asegurando que la fusión no genere una contradicción con los ejemplos de entrenamiento.
+
+#     Validación: Si la fusión respeta la clasificación de ejemplos positivos y negativos, se acepta la unión; de lo contrario, se rechaza.
+
+#     Minimización: Se repite el proceso hasta que no haya más fusiones posibles.
+
+#     :param dictSec: Diccionario que contiene los autómatas de las actividades.
+
+#     """
+#     pass
 
 
-# carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
-carpeta_base = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+
+
+
+
+carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+# carpeta_base = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
 
 dictAct = inicializarDict()
 dictSec = inicializarDict()
@@ -299,5 +358,12 @@ secuenciaMañana, secuenciaTarde, secuenciaNoche = [], [], []
 grafoMañana, grafoTarde, grafoNoche = generaSecuencias(carpeta_base, secuenciaMañana, secuenciaTarde, secuenciaNoche)
    
 generaAutomataActividades(dictAct, dictSec)
+
 for key in dictSec.keys():
     dibujar_automata(dictSec[key], key)
+    
+# dibujar_automata(rpni(dictSec["Act15"]), "Act 15 minimizada")
+
+# Proparamos el RPNI para minimizar los autómatas
+
+
