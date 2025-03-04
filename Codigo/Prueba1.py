@@ -116,25 +116,42 @@ def recorrer_carpetas(base_path, dictAct):
 
 def construir_automata(secuencias):
     """
-    Función que construye un autómata a partir de una lista de secuencias de actividades.(DiGraph)
+    Construye un autómata a partir de una lista de secuencias de actividades (DiGraph).
 
     :param secuencias: Lista de secuencias de actividades.
+    :return: Un DiGraph con nodos etiquetados como "Inicial", "Intermedio" o "Final".
     """
-    
-    G = nx.DiGraph() # Inicializar grafo dirigido
-    
-    for secuencia in secuencias: # Recorrer cada secuencia
 
-        for i in range(len(secuencia) - 1): # Recorro cada actividad de la secuencia, uniendo cada actividad con la siguiente
+    G = nx.DiGraph()  # Inicializar grafo dirigido
+
+    for secuencia in secuencias:  # Recorrer cada secuencia
+        for i in range(len(secuencia)):
             origen = secuencia[i]
-            destino = secuencia[i + 1]
+            destino = secuencia[i + 1] if i < len(secuencia) - 1 else None
 
-            # Si ya existe la arista, apunto 1 al peso, si no, la creo con peso 1
-            if G.has_edge(origen, destino):
-                G[origen][destino]['weight'] += 1
-            else:
-                G.add_edge(origen, destino, weight=1)
-    
+            # Si la arista existe, aumentar el peso; si no, crearla con peso 1
+            if destino:
+                if G.has_edge(origen, destino):
+                    G[origen][destino]['weight'] += 1
+                else:
+                    G.add_edge(origen, destino, weight=1)
+
+            # Si el nodo no existe, añadirlo con la etiqueta "Intermedio"
+            if origen not in G.nodes:
+                G.add_node(origen, label="Intermedio")
+            if destino and destino not in G.nodes:
+                G.add_node(destino, label="Intermedio")
+
+            # Obtener la etiqueta actual del nodo (si no existe, asignar "Intermedio")
+            etiqueta_actual = G.nodes[origen].get('label', "Intermedio")
+
+            # Reglas de prioridad para etiquetas
+            if i == 0:
+                G.nodes[origen]['label'] = "Inicial"  # Siempre gana "Inicial"
+            elif i == len(secuencia) - 1:
+                if etiqueta_actual != "Inicial":  # No sobreescribir si ya es "Inicial"
+                    G.nodes[origen]['label'] = "Final"
+
     return G
 
 def calcular_probabilidades(G):
@@ -158,9 +175,17 @@ def dibujar_automata(G, titulo = ""):
     """
     pos = nx.spring_layout(G, seed=5, k=0.4)  # Para un layout estable
     labels = {edge: G[edge[0]][edge[1]]['label'] for edge in G.edges}
+
+    # Colores de los nodos según su etiqueta
+    node_colors = [
+        'green' if G.nodes[node].get('label', 'Intermedio') in ['Inicial', 'Positivo']
+        else 'red' if G.nodes[node].get('label', 'Intermedio') == 'Final'
+        else 'lightgray'
+        for node in G.nodes
+    ]
     plt.figure(figsize=(12, 8))
     plt.title(titulo)
-    nx.draw(G, pos, with_labels=True, node_color='lightgray', edge_color='black', node_size=2000, font_size=8)
+    nx.draw(G, pos, with_labels=True, node_color=node_colors, edge_color='black', node_size=2000, font_size=8)
     nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
     plt.show()
 
@@ -254,14 +279,16 @@ def construir_automata_actividades(secuencias):
         historial = "[]"  # Nodo inicial vacío
         if historial not in G: # Si no existe el nodo, lo añadimos
             G.add_node(historial)
+            G.nodes[historial]['label'] = "Negativo"
         
         # Recorrer cada sensor de la secuencia
-        for sensor in secuencia:
+        for i, sensor in enumerate(secuencia):
             nuevo_nodo = f"{historial[:-1]} {sensor}]" if historial != "[]" else f"[{sensor}]" # Añadir sensor al historial (historial[:-1] quita el ] final)
 
             # Si no existe el nodo, lo añadimos
             if not G.has_node(nuevo_nodo):
                 G.add_node(nuevo_nodo)
+                G.nodes[nuevo_nodo]['label'] = "Negativo"
             
             # Si ya existe la arista, apuntamos 1 al peso, si no, la creamos con peso 1
             if G.has_edge(historial, nuevo_nodo):
@@ -271,6 +298,8 @@ def construir_automata_actividades(secuencias):
             
             # Actualizamos el historial
             historial = nuevo_nodo
+
+        G.nodes[historial]['label'] = "Positivo"
     
     return G
 
