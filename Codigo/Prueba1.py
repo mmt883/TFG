@@ -3,6 +3,7 @@ from datetime import datetime
 import networkx as nx
 import matplotlib.pyplot as plt
 from LecturasCSV import leer_todas_columnas_csv, leer_columna_csv
+from collections import Counter
 
 
 
@@ -178,8 +179,8 @@ def dibujar_automata(G, titulo = ""):
 
     # Colores de los nodos según su etiqueta
     node_colors = [
-        'green' if G.nodes[node].get('label', 'Intermedio') in ['Inicial', 'Positivo']
-        else 'red' if G.nodes[node].get('label', 'Intermedio') == 'Final'
+        'green' if G.nodes[node].get('label') in ['Inicial', 'Positivo']
+        else 'red' if G.nodes[node].get('label') == 'Final'
         else 'lightgray'
         for node in G.nodes
     ]
@@ -352,6 +353,205 @@ def generaAutomataActividades(dictAct, dictSec):
             
         dictSec[key] = construir_automata_actividades(value2)  # No se eliminó ningún sensor
 
+def extraerNodosOrdenados(grafo):
+    listaNodos = list(grafo.nodes())
+
+    # # Eliminar corchetes y dividir elementos en listas ordenables
+    # listaLimpia = [elem.strip('[]').split() for elem in listaNodos]
+
+    # Ordenar por número de palabras, luego alfabéticamente, luego numéricamente
+    listaOrdenada = sorted(listaNodos, key=lambda x: (len(x), x))
+
+    # Convertir de vuelta a strings sin corchetes
+    # nodosOrdenados = [' '.join(elem) for elem in listaOrdenada]
+
+    return listaOrdenada
+
+def combinar_nodos(grafo, nodo1, nodo2):
+    # Combinar nodo2 en nodo1
+    for _, destino, data in grafo.edges(nodo2, data=True):
+        grafo.add_edge(nodo1, destino, **data)
+    grafo.remove_node(nodo2)
+    return grafo
+
+def rpni_aux(grafo, nodoAMirar, nodoAnterior, positivos, negativos):
+
+
+    #Si uno es positivo y el otro es negativo pasar
+    # Combino nodoAnterior con nodo para ello 
+    # Elimino los arcos de nodoAMirar y los añado a nodoAnterior
+    # Si hay un arco de nodoAnterior a nodoAMirar, lo elimino y lo añado de nodoAnterior a nodoAnterior con el mismo simbolo
+    # Si desde nodoAnterior hay mas de un arco con el simbolo de nodoAMirar a otro nodo, Esos nodos tambien se deben combinar con nodoAnterior y hacer las mismas comprobaciones
+    # Si desde nodoAnterior hay mas de un arco con la misma etiqueta a nodos distintos esos dos nodos se deben combinar y hacer las mismas comprobaciones
+    # Por ultimo mirar si se acepta una combinacion negativa, si es asi, volver a estado seguro y pasar de nodoAnterior, Si no acepta ninguna combinacion negativa, guardar nuevo estado seguro
+
+    #Si va a guardar estado seguro, devolver True, grafoResultante
+    #Si no va a guardar estado seguro, devolver False, none
+
+    # Si uno es positivo y el otro es negativo, pasar
+    if (nodoAMirar in positivos and nodoAnterior in negativos) or (nodoAMirar in negativos and nodoAnterior in positivos):
+        return False, None
+
+    # Crear una copia del grafo para trabajar
+    grafoNuevo = grafo.copy()
+
+    # Eliminar los arcos de nodoAMirar y añadirlos a nodoAnterior
+    for _, destino, data in grafo.edges(nodoAMirar, data=True):
+        grafoNuevo.add_edge(nodoAnterior, destino, **data)
+    grafoNuevo.remove_node(nodoAMirar)
+
+    print("ELIMINAR LOS ARCOS DE NODOAMIRAR Y AÑADIRLOS A NODOANTERIOR")
+    print(grafoNuevo.nodes())
+    print(grafoNuevo.edges())
+    print("\n")
+
+    dataAnteriorAMirar = grafo[nodoAnterior][nodoAMirar].get('label')
+
+    # Si hay un arco de nodoAnterior a nodoAMirar, eliminarlo y añadir uno de nodoAnterior a nodoAnterior con el mismo símbolo
+    if grafo.has_edge(nodoAnterior, nodoAMirar):
+        data = grafo[nodoAnterior][nodoAMirar]
+        grafoNuevo.add_edge(nodoAnterior, nodoAnterior, **data)
+        # grafoNuevo.remove_edge(nodoAnterior, nodoAMirar)
+
+    print("SI HAY UN ARCO DE NODOANTERIOR A NODOAMIRAR, ELIMINARLO Y AÑADIR UNO DE NODOANTERIOR A NODOANTERIOR CON EL MISMO SÍMBOLO")
+    print(grafoNuevo.nodes())
+    print(grafoNuevo.edges())
+    print(grafoNuevo[nodoAnterior][nodoAnterior].get('label'))
+    print("\n")
+
+    # Comprobar si hay más de un arco con el símbolo de nodoAMirar a otro nodo desde nodoAnterior
+    combinacion_realizada = True
+    while combinacion_realizada:
+        combinacion_realizada = False
+        grafoCambios = grafoNuevo.copy()
+        for _, destino, data in grafoNuevo.edges(nodoAnterior, data=True):
+            if grafoCambios[nodoAnterior][destino].get('label') == dataAnteriorAMirar and destino != nodoAnterior:
+                print("A")
+                print(nodoAnterior, destino)
+                grafoCambios = combinar_nodos(grafoCambios, nodoAnterior, destino)
+                combinacion_realizada = True
+        grafoNuevo = grafoCambios
+
+    print("Comprobar si hay más de un arco con el símbolo de nodoAMirar a otro nodo desde nodoAnterior")
+    print(grafoNuevo.nodes())
+    print(grafoNuevo.edges())
+    print("\n")
+
+    # Comprobar si hay más de un arco con el símbolo de nodoAMirar a otro nodo desde nodoAnterior
+    combinacion_realizada = True
+    while combinacion_realizada:
+        combinacion_realizada = False
+        grafoCambios = grafoNuevo.copy()
+        for nodo in sorted(list(grafoNuevo.nodes()), key=lambda x: (len(x), x)):
+
+            # Contador para contar cuántas veces aparece cada destino por label
+            conteo = {}
+
+            for _, destino, data in grafoCambios.edges(nodo, data=True):
+                label = data.get("label")  # Suponiendo que el atributo es "label"
+                
+                if label:
+                    if label not in conteo:
+                        conteo[label] = list()
+                    
+                    conteo[label].append(destino)  # Cuenta las repeticiones
+
+            # Filtrar solo los destinos que aparecen al menos 2 veces
+            print("CONTEO")
+            print(nodo)
+            print(conteo)
+            for label in conteo:
+                repetidos = [dest for dest in conteo[label] if len(conteo[label]) >= 2]
+                if repetidos:
+                    duplicados = sorted(repetidos, key=lambda x: (len(x), x))
+                    print("Duplicados")
+                    print(duplicados)
+                    for i in range(1, len(duplicados)):
+                        grafoCambios = combinar_nodos(grafoCambios, duplicados[0], duplicados[i])
+                        combinacion_realizada = True
+                        print("Nodos combinados")
+                        print(duplicados[0], duplicados[i])
+        grafoNuevo = grafoCambios
+        print("BB")
+
+                    
+            
+                
+
+        # # Comprobar si hay más de un arco con la misma etiqueta a nodos distintos desde nodoAnterior
+        # etiquetas = {}
+        # for _, destino, data in grafo.edges(nodoAnterior, data=True):
+        #     etiqueta = data.get('label')
+        #     if etiqueta in etiquetas:
+        #         grafoNuevo = combinar_nodos(grafoNuevo, etiquetas[etiqueta], destino, positivos, negativos)
+        #         combinacion_realizada = True
+        #     else:
+        #         etiquetas[etiqueta] = destino
+
+        # # Volver a comprobar lo mismo para el nodo resultante
+        # for _, destino, data in list(grafoNuevo.edges(nodoAnterior, data=True)):
+        #     etiqueta = data.get('label')
+        #     if etiqueta in etiquetas:
+        #         grafoNuevo = combinar_nodos(grafoNuevo, etiquetas[etiqueta], destino, positivos, negativos)
+        #         combinacion_realizada = True
+        #     else:
+        #         etiquetas[etiqueta] = destino
+
+    print("DUPLICADOS ELIMINADOS")
+    print(grafoNuevo.nodes())
+    print(grafoNuevo.edges())
+    print("\n")
+    # Comprobar si se acepta una combinación negativa
+    # for nodo in negativos:
+    #     if not any(grafoNuevo.has_edge(nodo, destino) and grafoNuevo.nodes[destino]['label'] == "Negativo" for destino in grafoNuevo.successors(nodo)):
+            
+    #         return False, None
+
+    # Guardar nuevo estado seguro
+    return True, grafoNuevo
+
+
+def rpni(grafo):
+    positivos = [nodo for nodo in grafo.nodes if grafo.nodes[nodo]['label'] == "Positivo"]
+    negativos = [nodo for nodo in grafo.nodes if grafo.nodes[nodo]['label'] == "Negativo"]
+
+    nodosOrdenados = extraerNodosOrdenados(grafo)
+    
+    print(nodosOrdenados)
+    estadoSeguro = (grafo.copy(), nodosOrdenados.copy())
+    print(estadoSeguro)
+
+    cambioHecho = True
+    while cambioHecho:
+        cambioHecho = False
+        for i, nodoAMirar in enumerate(nodosOrdenados):
+            print(f"Procesando nodo {nodoAMirar}")
+            nodosAnteriores = nodosOrdenados[:i]
+            if(not nodosAnteriores):
+                pass
+
+            for nodoAnterior in nodosAnteriores:
+                print(f"Procesando nodo anterior {nodoAnterior}")
+                resultado, grafoNuevo = rpni_aux(grafo, nodoAMirar, nodoAnterior, positivos, negativos)
+
+                if(resultado):
+                    print(grafoNuevo.nodes())
+                    print(grafoNuevo.edges())
+                    cambioHecho = True
+                    break
+            if(cambioHecho):
+                break
+        if(cambioHecho):
+            grafo = grafoNuevo
+            nodosOrdenados = extraerNodosOrdenados(grafo)
+            
+
+        
+
+
+
+
+
 # def minimizar_automatas_RPNI(dictSec):
 #     """
 #     Minimiza los autómatas de las actividades con el algoritmo RPNI.
@@ -388,8 +588,10 @@ grafoMañana, grafoTarde, grafoNoche = generaSecuencias(carpeta_base, secuenciaM
    
 generaAutomataActividades(dictAct, dictSec)
 
-for key in dictSec.keys():
-    dibujar_automata(dictSec[key], key)
+# for key in dictSec.keys():
+#     dibujar_automata(dictSec[key], key)
+
+rpni(dictSec["Act15"])
     
 # dibujar_automata(rpni(dictSec["Act15"]), "Act 15 minimizada")
 
