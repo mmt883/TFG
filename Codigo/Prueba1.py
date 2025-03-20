@@ -572,8 +572,8 @@ def rpni(grafo):
 
 
 
-carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
-# carpeta_base = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+# carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+carpeta_base = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
 
 dictAct = inicializarDict()
 dictSec = inicializarDict()
@@ -591,7 +591,7 @@ generaAutomataActividades(dictAct, dictSec)
 # for key in dictSec.keys():
 #     dibujar_automata(dictSec[key], key)
 
-rpni(dictSec["Act15"])
+dibujar_automata(rpni(dictSec["Act15"]))
     
 # dibujar_automata(rpni(dictSec["Act15"]), "Act 15 minimizada")
 

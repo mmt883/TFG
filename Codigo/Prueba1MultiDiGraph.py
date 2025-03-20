@@ -375,6 +375,8 @@ def combinar_nodos(grafo, nodo1, nodo2):
     label_nodo1 = grafo.nodes[nodo1].get('label')
     label_nodo2 = grafo.nodes[nodo2].get('label')
     
+    print(nodo1, nodo2, grafo.edges(nodo1, data=True), grafo.edges(nodo2, data=True))
+    
     if label_nodo1 != label_nodo2:
         # if 'Positivo' in [label_nodo1, label_nodo2]:
         #     grafo.nodes[nodo1]['label'] = 'Positivo'
@@ -386,6 +388,7 @@ def combinar_nodos(grafo, nodo1, nodo2):
             new_key = max(grafo[nodo1][destino].keys(), default=-1) + 1
         else:
             new_key = 0
+        print("destino", destino, data)
         grafo.add_edge(nodo1, destino, key=new_key, **data)
     
     grafo.remove_node(nodo2)
@@ -656,8 +659,8 @@ def rpni(grafo):
 
 
 
-carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
-# carpeta_base = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+# carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+carpeta_base = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
 
 dictAct = inicializarDict()
 dictSec = inicializarDict()
@@ -684,8 +687,8 @@ for key, value in dictSec.items():
     print("===================")
     print(f"Automata minimizado de {key}")
     dibujar_automata(dictGrafoMin[key], key + " minimizado")
-    print(dictAct[key].nodes())
-    print(dictAct[key].edges(data=True))
+    print(dictGrafoMin[key].nodes())
+    print(dictGrafoMin[key].edges(data=True))
     print("\n")
     print("===================")
 

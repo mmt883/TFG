@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2025.2.25)  25 FEB 2025 12:57
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2025.2.25)  25 FEB 2025 14:36
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -6,9 +6,9 @@ entering extended mode
 (template_Article.tex
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
-(C:\Users\Usuario\AppData\Local\Programs\MiKTeX\tex/latex/base\article.cls
+(C:\Users\jesme\AppData\Local\Programs\MiKTeX\tex/latex/base\article.cls
 Document Class: article 2023/05/17 v1.4n Standard LaTeX document class
-(C:\Users\Usuario\AppData\Local\Programs\MiKTeX\tex/latex/base\size10.clo
+(C:\Users\jesme\AppData\Local\Programs\MiKTeX\tex/latex/base\size10.clo
 File: size10.clo 2023/05/17 v1.4n Standard LaTeX file (size option)
 )
 \c@part=\count187
@@ -23,8 +23,8 @@ File: size10.clo 2023/05/17 v1.4n Standard LaTeX file (size option)
 \belowcaptionskip=\skip49
 \bibindent=\dimen140
 )
-(C:\Users\Usuario\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-p
-dftex.def
+(C:\Users\jesme\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdf
+tex.def
 File: l3backend-pdftex.def 2024-01-04 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count195
 \l__pdf_internal_box=\box51
@@ -53,29 +53,29 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 18.
  [1
 
-{C:/Users/Usuario/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}] (template_
-Article.aux)
+{C:/Users/jesme/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}] (template_Ar
+ticle.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 473 strings out of 474486
- 9201 string characters out of 5742811
+ 473 strings out of 474485
+ 9179 string characters out of 5743734
  1929542 words of memory out of 5000000
- 22828 multiletter control sequences out of 15000+600000
+ 22829 multiletter control sequences out of 15000+600000
  562624 words of font info for 51 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  35i,7n,50p,742b,206s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Users/Usuario/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
-m/cmbx10.pfb><C:/Users/Usuario/AppData/Local/Programs/MiKTeX/fonts/type1/public
-/amsfonts/cm/cmbx12.pfb><C:/Users/Usuario/AppData/Local/Programs/MiKTeX/fonts/t
-ype1/public/amsfonts/cm/cmbx9.pfb><C:/Users/Usuario/AppData/Local/Programs/MiKT
-eX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Usuario/AppData/Local/Pro
-grams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/Usuario/AppData
-/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/Usuar
-io/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb>
+<C:/Users/jesme/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
+cmbx10.pfb><C:/Users/jesme/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
+fonts/cm/cmbx12.pfb><C:/Users/jesme/AppData/Local/Programs/MiKTeX/fonts/type1/p
+ublic/amsfonts/cm/cmbx9.pfb><C:/Users/jesme/AppData/Local/Programs/MiKTeX/fonts
+/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/jesme/AppData/Local/Programs/MiKT
+eX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/jesme/AppData/Local/Progr
+ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/jesme/AppData/Loc
+al/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb>
 Output written on template_Article.pdf (1 page, 91789 bytes).
 PDF statistics:
  41 PDF objects out of 1000 (max. 8388607)
