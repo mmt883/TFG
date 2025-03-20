@@ -487,7 +487,7 @@ def evaluar_secuencias(grafo, secuencias):
     
     return True
 
-def rpni_aux(grafo, nodoAMirar, nodoAnterior, positivos, negativos):
+def rpni_aux(grafo, nodoAMirar, nodoAnterior, negativos):
 
 
     #Si uno es positivo y el otro es negativo pasar
@@ -501,8 +501,10 @@ def rpni_aux(grafo, nodoAMirar, nodoAnterior, positivos, negativos):
     #Si va a guardar estado seguro, devolver True, grafoResultante
     #Si no va a guardar estado seguro, devolver False, none
 
-    print(nodoAMirar, nodoAnterior)
-    print(grafo.nodes(data=True))
+    # print(nodoAMirar, nodoAnterior)
+    # print(grafo.nodes(data=True))
+
+
     # Si uno es positivo y el otro es negativo, pasar
     if grafo.nodes[nodoAMirar]['label'] != grafo.nodes[nodoAnterior]['label']:
         return False, None
@@ -517,11 +519,11 @@ def rpni_aux(grafo, nodoAMirar, nodoAnterior, positivos, negativos):
         grafoNuevo.add_edge(nodoAnterior, destino, **data)
     grafoNuevo.remove_node(nodoAMirar)
 
-    print("ELIMINAR LOS ARCOS DE NODOAMIRAR Y AÑADIRLOS A NODOANTERIOR")
-    print(grafoNuevo.nodes())
-    print(grafoNuevo.edges(keys = True, data = True))
-    print(grafo.edges(keys = True, data = True))
-    print("\n")
+    # print("ELIMINAR LOS ARCOS DE NODOAMIRAR Y AÑADIRLOS A NODOANTERIOR")
+    # print(grafoNuevo.nodes())
+    # print(grafoNuevo.edges(keys = True, data = True))
+    # print(grafo.edges(keys = True, data = True))
+    # print("\n")
 
     # if grafo.has_edge(nodoAnterior, nodoAMirar):
     #     dataAnteriorAMirar = next(iter(grafo[nodoAnterior][nodoAMirar].values())).get('label')
@@ -530,6 +532,8 @@ def rpni_aux(grafo, nodoAMirar, nodoAnterior, positivos, negativos):
     
 
     # dibujar_automata(grafoNuevo, "Paso2")
+
+
     # Si hay un arco de nodoAnterior a nodoAMirar, eliminarlo y añadir uno de nodoAnterior a nodoAnterior con el mismo símbolo
     if grafo.has_edge(nodoAnterior, nodoAMirar):
         for _, attributes in grafo[nodoAnterior][nodoAMirar].items():
@@ -555,14 +559,14 @@ def rpni_aux(grafo, nodoAMirar, nodoAnterior, positivos, negativos):
                             new_key = 0
                         grafoNuevo.add_edge(nodo, nodoAnterior, key=new_key, **attributes)
 
-    print(list(grafoNuevo.edges(keys=True, data=True)))
+    # print(list(grafoNuevo.edges(keys=True, data=True)))
     # dibujar_automata(grafoNuevo, "Paso3" )
     
 
-    print("SI HAY UN ARCO DE NODOANTERIOR A NODOAMIRAR, ELIMINARLO Y AÑADIR UNO DE NODOANTERIOR A NODOANTERIOR CON EL MISMO SÍMBOLO")
-    print(grafoNuevo.nodes())
-    print(grafoNuevo.edges())
-    print("\n")
+    # print("SI HAY UN ARCO DE NODOANTERIOR A NODOAMIRAR, ELIMINARLO Y AÑADIR UNO DE NODOANTERIOR A NODOANTERIOR CON EL MISMO SÍMBOLO")
+    # print(grafoNuevo.nodes())
+    # print(grafoNuevo.edges())
+    # print("\n")
 
     
     # Comprobar si hay más de un arco con el símbolo de nodoAMirar a otro nodo desde nodoAnterior
@@ -602,37 +606,39 @@ def rpni_aux(grafo, nodoAMirar, nodoAnterior, positivos, negativos):
                     conteo[label].append(destino)  # Cuenta las repeticiones
 
             # Filtrar solo los destinos que aparecen al menos 2 veces
-            print("CONTEO")
-            print(nodo)
-            print(conteo)
+            # print("CONTEO")
+            # print(nodo)
+            # print(conteo)
             for label in conteo:
                 repetidos = [dest for dest in conteo[label] if len(conteo[label]) >= 2]
                 if repetidos:
                     duplicados = sorted(repetidos, key=lambda x: (len(x), x))
-                    print("Duplicados")
-                    print(duplicados)
+                    # print("Duplicados")
+                    # print(duplicados)
                     for i in range(1, len(duplicados)):
                         if duplicados[i] in grafoCambios.nodes() and duplicados[0] in grafoCambios.nodes():
                             grafoCambios = combinar_nodos(grafoCambios, duplicados[0], duplicados[i])
                             combinacion_realizada = True
-                            print("Nodos combinados")
-                            print(duplicados[0], duplicados[i])
+                            # print("Nodos combinados")
+                            # print(duplicados[0], duplicados[i])
         grafoNuevo = grafoCambios
-        print("BB")
+        # print("BB")
 
     # dibujar_automata(grafoNuevo)
 
-    print("DUPLICADOS ELIMINADOS")
-    print(grafoNuevo.nodes())
-    print(grafoNuevo.edges())
-    print("\n")
+    # print("DUPLICADOS ELIMINADOS")
+    # print(grafoNuevo.nodes())
+    # print(grafoNuevo.edges())
+    # print("\n")
 
-    print(negativos)
+    # print(negativos)
 
     # Guardar nuevo estado seguro
-    print(list(grafoNuevo.nodes(data=True)))
-    print(list(grafoNuevo.edges(keys=True, data=True)))
+    # print(list(grafoNuevo.nodes(data=True)))
+    # print(list(grafoNuevo.edges(keys=True, data=True)))
 
+
+    #Evaluar las secuencias
     if evaluar_secuencias(grafoNuevo, negativos):
         print("Todo correcto")
         return True, grafoNuevo
@@ -662,7 +668,7 @@ def rpni(grafo, key):
             for nodoAnterior in nodosAnteriores:
                 print(f"Procesando nodo anterior {nodoAnterior}")
                 try:
-                    resultado, grafoNuevo = rpni_aux(grafo, nodoAMirar, nodoAnterior, positivos, negativos)
+                    resultado, grafoNuevo = rpni_aux(grafo, nodoAMirar, nodoAnterior, negativos)
                 except ValueError as e:
                     print(f"Error: {e}")
                     resultado = False
@@ -670,6 +676,7 @@ def rpni(grafo, key):
                 print(resultado)
 
                 if(resultado):
+                    print("\n")
                     print(grafoNuevo.nodes(data=True))
                     print(grafoNuevo.edges(data=True))
                     cambioHecho = True
@@ -681,6 +688,7 @@ def rpni(grafo, key):
             nodosOrdenados = extraerNodosOrdenados(grafo)
             estado  += 1
             dibujar_automata(grafo, f"{key} Estado {estado}")
+            print("\n")
     
     return grafo
             
@@ -738,9 +746,9 @@ for key, value in dictSec.items():
     print("\n")
     print("===================")
     print(f"Automata minimizado de {key}")
-    dibujar_automata(dictGrafoMin[key], key + " minimizado")
     print(dictGrafoMin[key].nodes())
     print(dictGrafoMin[key].edges(data=True))
+    dibujar_automata(dictGrafoMin[key], key + " minimizado")
     print("\n")
     print("===================")
 
