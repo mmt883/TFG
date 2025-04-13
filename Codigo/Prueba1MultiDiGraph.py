@@ -2,21 +2,13 @@ import os
 from datetime import datetime
 import networkx as nx
 import matplotlib.pyplot as plt
-from LecturasCSV import leer_todas_columnas_csv, leer_columna_csv
 from collections import Counter
+import re
 
+from LecturasCSV import leer_todas_columnas_csv, leer_columna_csv
+from ObtenerRegex import dfa_to_regex
+from RPNI import rpni
 
-
-# Ejemplo de uso:
-
-#Objetivo leer datos de csv y ir dividiendo segun hora inicial y final acorde a actividades
-#Tenemos varios csv con datos: Date begin, Date End, Activity, Habitant
-#Y otros con: TimeStamp, Object, State, Habitant
-
-# OBJETIVO A SIGUIENTE:
-# ALMACENAR TODOS LOS SENSORES DE UNA ACTIVIDAD, filtrando segun hora inicial y final y
-# Busco en valores los sensores que se dieron en una actividad, filtrando por hora inicial y final,
-# y almaceno en el diccionario con key = Act1, Act2, Act3, etc
 
 
 def inicializarDict():
@@ -75,7 +67,7 @@ def procesar_archivo_csv(ruta_Act, ruta_Sen, dictAct):
 
     filtrar_sensores_por_actividad(valores, horas_inicio, horas_fin, act, dictAct)
 
-def recorrer_carpetas(base_path, dictAct):
+def recorrer_carpetas(base_path, base_path_aux, dictAct):
     """
     Recorre todas las subcarpetas desde la carpeta base y procesa archivos CSV según su nombre.
 
@@ -86,7 +78,12 @@ def recorrer_carpetas(base_path, dictAct):
     # Comprobar si la carpeta base existe
     if not os.path.exists(base_path):
         print(f"Error: La carpeta '{base_path}' no existe.")
-        return
+        base_path = base_path_aux
+
+        if not os.path.exists(base_path):
+            print(f"Error: La carpeta '{base_path}' no existe.")
+
+            return
     
     # Recorrer todas las subcarpetas
     for carpeta_actual, _, archivos in os.walk(base_path):
@@ -308,12 +305,7 @@ def construir_automata_actividades(secuencias):
     
     return G
 
-# def generaAutomataActividades(dictAct, dictSec):
-#     for key, value in dictAct.items():
-#         print(f"Actividad: {key}")
-#         dictSec[key] = construir_automata_actividades(value)
-
-def es_sensor_SM(sensor):
+def  es_sensor_SM(sensor):
     """
     Verifica si un sensor es del tipo 'SM'.
     
@@ -333,8 +325,8 @@ def generaAutomataActividades(dictAct, dictSec):
     for key, value in dictAct.items():
         print(f"Procesando actividad: {key}")
 
-        # Verificar si existe al menos un sensor NO SM en alguna lista
-        existe_sensor_no_sm = any(
+        # Verificar si todas las listas tienen al menos un sensor que no empieza por "SM"
+        existe_sensor_no_sm = all(
             any(not es_sensor_SM(sensor) for sensor in lista) for lista in value
         )
 
@@ -357,85 +349,9 @@ def generaAutomataActividades(dictAct, dictSec):
             
         dictSec[key] = construir_automata_actividades(value2)  # No se eliminó ningún sensor
 
-def extraerNodosOrdenados(grafo):
-    listaNodos = list(grafo.nodes())
-
-    # # Eliminar corchetes y dividir elementos en listas ordenables
-    # listaLimpia = [elem.strip('[]').split() for elem in listaNodos]
-
-    # Ordenar por número de palabras, luego alfabéticamente, luego numéricamente
-    listaOrdenada = sorted(listaNodos, key=lambda x: (len(x), x))
-
-    # Convertir de vuelta a strings sin corchetes
-    # nodosOrdenados = [' '.join(elem) for elem in listaOrdenada]
-
-    return listaOrdenada
-
-def combinar_nodos(grafo, nodo1, nodo2):
-    # #Caso especial
-    if nodo1 == nodo2:
-        print("C")
-        # Eliminamos arcos duplicados sumando los weights
-        # Contador para contar cuántas veces aparece cada destino por label
-        conteo = {}
-        for _, destino, data in grafo.edges(nodo1, data=True):
-            label = data.get("label")  # Suponiendo que el atributo es "label"             
-            if label:
-                if label not in conteo:
-                    conteo[label] = list()                   
-                conteo[label].append(destino)  # Cuenta las repeticiones
-        # Filtrar solo los destinos que aparecen al menos 2 veces
-        for label in conteo:
-            repetidos = [dest for dest in conteo[label] if len(conteo[label]) >= 2]
-            if repetidos:
-                # Sumar los pesos de todas las aristas con label "A" y conservar solo una
-                weights = []
-                keys_to_remove = []
-                keep_key = None  # Clave de la arista que conservaremos
-
-                # Identificar las aristas con label "A"
-                for key in list(grafo[nodo1][nodo2]):
-                    if grafo[nodo1][nodo2][key].get('label') == label:
-                        weights.append(grafo[nodo1][nodo2][key].get("weight"))
-                        if keep_key is None:
-                            keep_key = key  # La primera arista será la que conservemos
-                        else:
-                            keys_to_remove.append(key)  # Las demás se eliminarán
-
-                # Sumar los pesos y actualizar la arista que conservamos
-                if keep_key is not None:
-                    grafo[nodo1][nodo2][keep_key]["weight"] = sum(weights)
-
-                # Eliminar las otras aristas con label "A"
-                for key in keys_to_remove:
-                    grafo.remove_edge(nodo1, nodo2, key=key)
-
-        return grafo
 
 
-    # Comprobar y mantener la etiqueta 'Positivo' si hay conflicto
-    # print(f"Combinando nodos {nodo1} y {nodo2}")
-    # print(grafo.nodes(data=True))
-    label_nodo1 = grafo.nodes[nodo1].get('label')
-    label_nodo2 = grafo.nodes[nodo2].get('label')
-    
-    print(nodo1, nodo2, grafo.edges(nodo1, data=True), grafo.edges(nodo2, data=True))
-    
-    if label_nodo1 != label_nodo2:
-        # if 'Positivo' in [label_nodo1, label_nodo2]:
-        #     grafo.nodes[nodo1]['label'] = 'Positivo'
-        raise ValueError(f"Conflicto de etiquetas: {label_nodo1} y {label_nodo2}")
-    
-    # Combinar nodo2 en nodo1
-    for _, destino, data in grafo.edges(nodo2, data=True):
-        if grafo.has_edge(nodo1, destino):
-            new_key = max(grafo[nodo1][destino].keys(), default=-1) + 1
-        else:
-            new_key = 0
-        grafo.add_edge(nodo1, destino, key=new_key, **data)    
-    grafo.remove_node(nodo2)
-    
-    return grafo
+
 
 def pintar_multigrafo(grafoNuevo):
     plt.figure(figsize=(6, 4))
@@ -455,257 +371,174 @@ def pintar_multigrafo(grafoNuevo):
 
     plt.show()
 
-def evaluar_secuencias(grafo, secuencias):
+def obtenerActividadesPosibles(grafo_A_Mirar, actividadAnterior, actividadesAnteriores):
     """
-    Procesa las secuencias y verifica si terminan en nodos con label 'Negativo'.
+    En funcion del nombre del documento(mañana, tarde o noche) se obtienen las actividades posibles en funcion de la actividad anterior.
+    :param nombreDocumento: Nombre del documento CSV.
+    :param actividadAnterior: Actividad anterior.
     
-    :param grafo: Un objeto MultiDiGraph de NetworkX.
-    :param secuencias: Lista de secuencias de sensores.
-    :return: True si todas las secuencias terminan en nodos con label 'Negativo', False en caso contrario.
+    :return: Lista de actividades posibles.
     """
-    for secuencia in secuencias:
-        nodo_actual = '[]'  # Nodo inicial
-        sensores = secuencia.strip('[]').split()
-        
-        for sensor in sensores:
-            encontrado = False
-            for _, nodo_destino, data in grafo.out_edges(nodo_actual, data=True):
-                if data.get('label') == sensor:
-                    nodo_actual = nodo_destino
-                    encontrado = True
-                    break
-            
-            if not encontrado:
-                break  # Se detiene si no hay transición válida
-        
-        if nodo_actual in grafo.nodes:
-            label = grafo.nodes[nodo_actual].get('label')
-            if label != 'Negativo':
-                print(f"Secuencia {sensores} termina en nodo {nodo_actual} con label {label}")
-                return False
-        else:
-            print(f"Secuencia {sensores} termina en nodo {nodo_actual} con label {label}")
-            return False  # Si el nodo final no existe en el grafo
+
+    actividadesPosibles = []
+    PosiblesEnCualquierMomento = ["Act11", "Act09", "Act14", "Act18", "Act12"]
+    if actividadAnterior in PosiblesEnCualquierMomento and not any(actividad in grafo_A_Mirar.nodes() for actividad in PosiblesEnCualquierMomento):
+        return actividadesAnteriores
     
-    return True
+    if actividadAnterior == "":
+        print("A")
+        # Cojo los nodos iniciales del grafo
+        nodos_iniciales = [nodo for nodo in grafo_A_Mirar.nodes() if grafo_A_Mirar.nodes[nodo].get('label') == 'Inicial']   
+        actividadesPosibles = nodos_iniciales
+    else:    
+        destinos_con_peso = [
+            (destino, data['weight'])
+            for _, destino, key, data in grafo_A_Mirar.out_edges(actividadAnterior, keys=True, data=True)
+            if 'weight' in data
+        ]
 
-def rpni_aux(grafo, nodoAMirar, nodoAnterior, negativos):
+        # Ordenar por peso
+        destinos_ordenados = [destino for destino, peso in sorted(destinos_con_peso, key=lambda x: x[1])]
+        actividadesPosibles = destinos_ordenados
+
+    #Por último, añadimos distintas actividades a mano que podrian ocurrir en cualquier momento
+    print("Actividades Posibles in extras: ", actividadesPosibles)
+    actividadesPosibles.extend(PosiblesEnCualquierMomento)
+
+    print("Actividades posibles: ", actividadesPosibles)
+
+    # Filtrar actividades posibles para que no se repitan
+    actividadesPosibles = list(dict.fromkeys(actividadesPosibles))
+
+    print("Actividades posibles Sin Duplicar: ", actividadesPosibles)
+
+    return actividadesPosibles
 
 
-    #Si uno es positivo y el otro es negativo pasar
-    # Combino nodoAnterior con nodo para ello 
-    # Elimino los arcos de nodoAMirar y los añado a nodoAnterior
-    # Si hay un arco de nodoAnterior a nodoAMirar, lo elimino y lo añado de nodoAnterior a nodoAnterior con el mismo simbolo
-    # Si desde nodoAnterior hay mas de un arco con el simbolo de nodoAMirar a otro nodo, Esos nodos tambien se deben combinar con nodoAnterior y hacer las mismas comprobaciones
-    # Si desde nodoAnterior hay mas de un arco con la misma etiqueta a nodos distintos esos dos nodos se deben combinar y hacer las mismas comprobaciones
-    # Por ultimo mirar si se acepta una combinacion negativa, si es asi, volver a estado seguro y pasar de nodoAnterior, Si no acepta ninguna combinacion negativa, guardar nuevo estado seguro
-
-    #Si va a guardar estado seguro, devolver True, grafoResultante
-    #Si no va a guardar estado seguro, devolver False, none
-
-    # print(nodoAMirar, nodoAnterior)
-    # print(grafo.nodes(data=True))
-
-
-    # Si uno es positivo y el otro es negativo, pasar
-    if grafo.nodes[nodoAMirar]['label'] != grafo.nodes[nodoAnterior]['label']:
-        return False, None
-
-    # Crear una copia del grafo para trabajar
-    grafoNuevo = grafo.copy()
-
-    # dibujar_automata(grafoNuevo)
-
-    # Eliminar los arcos de nodoAMirar y añadirlos a nodoAnterior
-    for _, destino, data in grafo.edges(nodoAMirar, data=True):
-        grafoNuevo.add_edge(nodoAnterior, destino, **data)
-    grafoNuevo.remove_node(nodoAMirar)
-
-    # print("ELIMINAR LOS ARCOS DE NODOAMIRAR Y AÑADIRLOS A NODOANTERIOR")
-    # print(grafoNuevo.nodes())
-    # print(grafoNuevo.edges(keys = True, data = True))
-    # print(grafo.edges(keys = True, data = True))
-    # print("\n")
-
-    # if grafo.has_edge(nodoAnterior, nodoAMirar):
-    #     dataAnteriorAMirar = next(iter(grafo[nodoAnterior][nodoAMirar].values())).get('label')
-    # else:
-    #     dataAnteriorAMirar = None
+def obtenerActividadesDocumento(direccionDocumento):
+    """
+    Lee un documento de sensores extrayendo tuplas Sensor, Tiempo y luego procesa los sensores sobre los regex de las actividades posibles en funcion de los grafos de cada tiempo.
+    :param nombre_documento: Nombre del documento CSV.
+    :return: Lista de (actividades, tiempo-inicio, tiempo-fin).
+    """
     
+    sensores = leer_columna_csv(direccionDocumento, 'OBJECT')
+    tiempos = leer_columna_csv(direccionDocumento, 'TIMESTAMP')
 
-    # dibujar_automata(grafoNuevo, "Paso2")
-
-
-    # Si hay un arco de nodoAnterior a nodoAMirar, eliminarlo y añadir uno de nodoAnterior a nodoAnterior con el mismo símbolo
-    if grafo.has_edge(nodoAnterior, nodoAMirar):
-        for _, attributes in grafo[nodoAnterior][nodoAMirar].items():
-            if nodoAnterior in grafoNuevo and grafoNuevo.has_edge(nodoAnterior, nodoAnterior):
-                new_key = max(grafoNuevo[nodoAnterior][nodoAnterior].keys(), default=-1) + 1
-            else:
-                new_key = 0  # Si no existe, empieza en 0
-            grafoNuevo.add_edge(nodoAnterior, nodoAnterior, key=new_key, **attributes)
-    else: #Añadir los arcos que iban originalmente a nodoAMirar a nodoAnterior
-        for nodo in grafo.nodes():
-            if grafo.has_edge(nodo, nodoAMirar):
-                for _, attributes in grafo[nodo][nodoAMirar].items():
-                    if nodo == nodoAMirar:
-                        if nodoAnterior in grafoNuevo and grafoNuevo.has_edge(nodoAnterior, nodoAnterior):
-                            new_key = max(grafoNuevo[nodoAnterior][nodoAnterior].keys(), default=-1) + 1
-                        else:
-                            new_key = 0
-                        grafoNuevo.add_edge(nodoAnterior, nodoAnterior, key=new_key, **attributes)
-                    else:
-                        if nodo in grafoNuevo and grafoNuevo.has_edge(nodo, nodoAnterior):
-                            new_key = max(grafoNuevo[nodo][nodoAnterior].keys(), default=-1) + 1
-                        else:
-                            new_key = 0
-                        grafoNuevo.add_edge(nodo, nodoAnterior, key=new_key, **attributes)
-
-    # print(list(grafoNuevo.edges(keys=True, data=True)))
-    # dibujar_automata(grafoNuevo, "Paso3" )
-    
-
-    # print("SI HAY UN ARCO DE NODOANTERIOR A NODOAMIRAR, ELIMINARLO Y AÑADIR UNO DE NODOANTERIOR A NODOANTERIOR CON EL MISMO SÍMBOLO")
-    # print(grafoNuevo.nodes())
-    # print(grafoNuevo.edges())
-    # print("\n")
-
-    
-    # Comprobar si hay más de un arco con el símbolo de nodoAMirar a otro nodo desde nodoAnterior
-    
-    # print(dataAnteriorAMirar)
-    # combinacion_realizada = True
-    # while combinacion_realizada:
-    #     combinacion_realizada = False
-    #     grafoCambios = grafoNuevo.copy()
-    #     for _, destino, key, data in grafoNuevo.edges(nodoAnterior, keys=True, data=True):
-    #         print(data.get('label'))
-    #         if data.get('label') == dataAnteriorAMirar and destino != nodoAnterior:
-    #             print("A")
-    #             print(nodoAnterior, destino)
-    #             grafoCambios = combinar_nodos(grafoCambios, nodoAnterior, destino)
-    #             combinacion_realizada = True
-    #     grafoNuevo = grafoCambios
-
-    # print("Comprobar si hay más de un arco con el símbolo de nodoAMirar a otro nodo desde nodoAnterior")
-    # print(grafoNuevo.nodes())
-    # print(grafoNuevo.edges())
-    # print("\n")
-
-    # Combina nodos a los que se llega con el mismo símbolo desde cualquier nodo
-    combinacion_realizada = True
-    while combinacion_realizada:
-        combinacion_realizada = False
-        grafoCambios = grafoNuevo.copy()
-        for nodo in sorted(list(grafoNuevo.nodes()), key=lambda x: (len(x), x)):
-            # Contador para contar cuántas veces aparece cada destino por label
-            conteo = {}
-            for _, destino, data in grafoCambios.edges(nodo, data=True):
-                label = data.get("label")  # Suponiendo que el atributo es "label"             
-                if label:
-                    if label not in conteo:
-                        conteo[label] = list()                   
-                    conteo[label].append(destino)  # Cuenta las repeticiones
-
-            # Filtrar solo los destinos que aparecen al menos 2 veces
-            # print("CONTEO")
-            # print(nodo)
-            # print(conteo)
-            for label in conteo:
-                repetidos = [dest for dest in conteo[label] if len(conteo[label]) >= 2]
-                if repetidos:
-                    duplicados = sorted(repetidos, key=lambda x: (len(x), x))
-                    # print("Duplicados")
-                    # print(duplicados)
-                    for i in range(1, len(duplicados)):
-                        if duplicados[i] in grafoCambios.nodes() and duplicados[0] in grafoCambios.nodes():
-                            grafoCambios = combinar_nodos(grafoCambios, duplicados[0], duplicados[i])
-                            combinacion_realizada = True
-                            # print("Nodos combinados")
-                            # print(duplicados[0], duplicados[i])
-        grafoNuevo = grafoCambios
-        # print("BB")
-
-    # dibujar_automata(grafoNuevo)
-
-    # print("DUPLICADOS ELIMINADOS")
-    # print(grafoNuevo.nodes())
-    # print(grafoNuevo.edges())
-    # print("\n")
-
-    # print(negativos)
-
-    # Guardar nuevo estado seguro
-    # print(list(grafoNuevo.nodes(data=True)))
-    # print(list(grafoNuevo.edges(keys=True, data=True)))
-
-
-    #Evaluar las secuencias
-    if evaluar_secuencias(grafoNuevo, negativos):
-        print("Todo correcto")
-        return True, grafoNuevo
+    if "a-sensors" in direccionDocumento:
+        print("A")
+        grafo_A_Mirar = grafoMañana
+    elif "b-sensors" in direccionDocumento:
+        print("B")
+        grafo_A_Mirar = grafoTarde
     else:
-        print("No se acepta")
-        return False, None
+        print("C")
+        grafo_A_Mirar = grafoNoche
 
+    actividades = []
+    regexSensor = ""
+    regexSensorNoSM = ""
+    tiempoInicial = None
+    tiempoInicialNoSM = None
+    tiempoFinal = None
+    actividadAnterior = ""
+    actividadesAnteriores = []
+    for i in range(len(sensores)):
+        regexSensor = regexSensor + sensores[i]
+        if not es_sensor_SM(sensores[i]):
+            regexSensorNoSM = regexSensorNoSM + sensores[i]
+            if tiempoInicialNoSM is None:
+                tiempoInicialNoSM = tiempos[i]
+        if tiempoInicial is None:
+            tiempoInicial = tiempos[i]
+            actividadesPosibles = obtenerActividadesPosibles(grafo_A_Mirar, actividadAnterior, actividadesAnteriores)
+        
+        tiempoFinal = tiempos[i]
+        print(regexSensor, regexSensorNoSM, actividadesPosibles)
+        for actividad in actividadesPosibles:
+            print(actividad)
+            if re.match(dictRegex[actividad], regexSensor):
+                print("HA MATCHEADO CON SM")
+                print(actividad, tiempoInicialNoSM, tiempoFinal)
+                actividades.append((actividad, tiempoInicial, tiempoFinal))
+                actividadAnterior = actividad
 
-def rpni(grafo, key):
-    print(f"Procesando {key}")
-    positivos = [nodo for nodo in grafo.nodes if grafo.nodes[nodo]['label'] == "Positivo"]
-    negativos = [nodo for nodo in grafo.nodes if grafo.nodes[nodo]['label'] == "Negativo"]
-
-    nodosOrdenados = extraerNodosOrdenados(grafo)
-
-    estado = 0
-
-    cambioHecho = True
-    while cambioHecho:
-        cambioHecho = False
-        for i, nodoAMirar in enumerate(nodosOrdenados):
-            print(f"Procesando nodo {nodoAMirar}")
-            nodosAnteriores = nodosOrdenados[:i]
-            if(not nodosAnteriores):
-                pass
-
-            for nodoAnterior in nodosAnteriores:
-                print(f"Procesando nodo anterior {nodoAnterior}")
-                try:
-                    resultado, grafoNuevo = rpni_aux(grafo, nodoAMirar, nodoAnterior, negativos)
-                except ValueError as e:
-                    print(f"Error: {e}")
-                    resultado = False
-                    grafoNuevo = None
-                print(resultado)
-
-                if(resultado):
-                    print("\n")
-                    print(grafoNuevo.nodes(data=True))
-                    print(grafoNuevo.edges(data=True))
-                    cambioHecho = True
-                    break
-            if(cambioHecho):
+                actividadesAnteriores = actividadesPosibles.copy()
+                tiempoInicial = None
+                tiempoInicialNoSM = None
+                tiempoFinal = None
+                regexSensor = ""
+                regexSensorNoSM = ""
                 break
-        if(cambioHecho):
-            grafo = grafoNuevo
-            nodosOrdenados = extraerNodosOrdenados(grafo)
-            estado  += 1
-            dibujar_automata(grafo, f"{key} Estado {estado}")
-            print("\n")
-    
-    return grafo
-            
 
+            if re.match(dictRegex[actividad], regexSensorNoSM):
+                print("HA MATCHEADO SIN SM")
+                print(actividad, tiempoInicialNoSM, tiempoFinal)
+                actividades.append((actividad, tiempoInicialNoSM, tiempoFinal))
+                actividadAnterior = actividad
+
+                actividadesAnteriores = actividadesPosibles.copy()
+                tiempoInicial = None
+                tiempoInicialNoSM = None
+                tiempoFinal = None
+                regexSensor = ""
+                regexSensorNoSM = ""
+                break
+            
+def procesar_tests(base_path, base_path_aux):
+
+    # Comprobar si la carpeta base existe
+    if not os.path.exists(base_path):
+        print(f"Error: La carpeta '{base_path}' no existe.")
+        base_path = base_path_aux
+
+        if not os.path.exists(base_path):
+            print(f"Error: La carpeta '{base_path}' no existe.")
+            return
+    
+    # Recorrer todas las subcarpetas
+    for carpeta_actual, _, archivos in os.walk(base_path):
+        print(f"Entrando en carpeta: {carpeta_actual}")
+
+        rutaSen =""
+
+        if not archivos:
+            print(f"No se encontraron archivos en {carpeta_actual}")
+
+        for archivo in archivos:
+            if archivo.endswith(".csv"):  # Solo considerar archivos CSV
+                archivo_lower = archivo.lower()  # Convertir a minúsculas
+                ruta_completa = os.path.normpath(os.path.join(carpeta_actual, archivo_lower))
+                # print(f"Procesando archivo: {ruta_completa}")
+                
+                # Filtramos los archivos según su tipo
+                if "sensor" in archivo:
+                    rutaSen = ruta_completa
+                # else:
+                    # print(f"Omitiendo archivo: {ruta_completa}")
+        if rutaSen:
+            print(f"Sensor: {rutaSen}\n")
+            actividades = obtenerActividadesDocumento(rutaSen)
+            for (actividad, tiempo_inicio, tiempo_fin) in actividades:
+                print(f"Actividad: {actividad}, Tiempo de inicio: {tiempo_inicio}, Tiempo de fin: {tiempo_fin}")
+            print("\n")
+
+    
 
 
 
 carpeta_base = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
-# carpeta_base = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+carpeta_base_aux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
+carpeta_base_test = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Test/"
+carpeta_base_test_aux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Test/"
+
 
 dictAct = inicializarDict()
 dictSec = inicializarDict()
 dictGrafoMin = inicializarDict()
+dictRegex = inicializarDict()
 
-recorrer_carpetas(carpeta_base, dictAct)
+recorrer_carpetas(carpeta_base, carpeta_base_aux, dictAct)
 for key, value in dictAct.items():
     print(f"{key}: {len(value)}")
 
@@ -718,31 +551,35 @@ generaAutomataActividades(dictAct, dictSec)
 # for key in dictSec.keys():
 #     dibujar_automata(dictSec[key], key)
 
-dibujar_automata(rpni(dictSec["Act07"], "Act15"))
-dibujar_automata(rpni(dictSec["Act15"], "Act15"))
 
 for key, value in dictSec.items():
     
-    print("===================")
-    print(f"Automata de {key}")
-    dibujar_automata(value, key)
-    print("\n")
-    print("===================")
+    # print("===================")
+    # print(f"Automata de {key}")
+    # dibujar_automata(value, key)
+    # print("\n")
+    # print("===================")
     
     dictGrafoMin[key] = rpni(value, key)
-    print("\n")
+    # print("\n")
+    # print("===================")
+    # print(f"Automata minimizado de {key}")
+    
+    # # print("\n")
+    # print(f"Expresion regular de {key}")
+    nodosFinales = [nodo for nodo in dictGrafoMin[key].nodes() if dictGrafoMin[key].nodes[nodo]['label'] == "Positivo"]
+    nodoInicial = '[]'
+    regex = dfa_to_regex(dictGrafoMin[key], nodoInicial, nodosFinales)
+    # print(regex)
+    # print(dictGrafoMin[key].nodes())
+    # print(dictGrafoMin[key].edges(data=True))
+    # dibujar_automata(dictGrafoMin[key], key + " minimizado")
+    dictRegex[key] = regex
+    # print("\n")
     print("===================")
-    print(f"Automata minimizado de {key}")
-    print(dictGrafoMin[key].nodes())
-    print(dictGrafoMin[key].edges(data=True))
-    dibujar_automata(dictGrafoMin[key], key + " minimizado")
-    print("\n")
-    print("===================")
+
+procesar_tests(carpeta_base, carpeta_base_aux)
 
 
     
-# dibujar_automata(rpni(dictSec["Act15"]), "Act 15 minimizada")
-
-# Proparamos el RPNI para minimizar los autómatas
-
-
+            
