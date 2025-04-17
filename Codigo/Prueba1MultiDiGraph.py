@@ -190,7 +190,7 @@ def dibujar_automata(G, titulo = ""):
     nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
     plt.show()
 
-def generaSecuencias(base_path, secuenciaMañana, secuenciaTarde, secuenciaNoche):
+def generaSecuencias(base_path, base_path_aux, secuenciaMañana, secuenciaTarde, secuenciaNoche):
     """
     Genera las secuencias de actividades y construye los autómatas correspondientes.
     
@@ -203,7 +203,12 @@ def generaSecuencias(base_path, secuenciaMañana, secuenciaTarde, secuenciaNoche
     # Comprobar si la carpeta base existe
     if not os.path.exists(base_path):
         print(f"Error: La carpeta '{base_path}' no existe.")
-        return
+        base_path = base_path_aux
+
+        if not os.path.exists(base_path):
+            print(f"Error: La carpeta '{base_path}' no existe.")
+
+            return
     
     # Recorrer todas las subcarpetas
     for carpeta_actual, _, archivos in os.walk(base_path):
@@ -402,7 +407,7 @@ def obtenerActividadesPosibles(grafo_A_Mirar, actividadAnterior, actividadesAnte
         actividadesPosibles = destinos_ordenados
 
     #Por último, añadimos distintas actividades a mano que podrian ocurrir en cualquier momento
-    print("Actividades Posibles in extras: ", actividadesPosibles)
+    print("Actividades Posibles sin extras: ", actividadesPosibles)
     actividadesPosibles.extend(PosiblesEnCualquierMomento)
 
     print("Actividades posibles: ", actividadesPosibles)
@@ -544,7 +549,7 @@ for key, value in dictAct.items():
 
 secuenciaMañana, secuenciaTarde, secuenciaNoche = [], [], []
 
-grafoMañana, grafoTarde, grafoNoche = generaSecuencias(carpeta_base, secuenciaMañana, secuenciaTarde, secuenciaNoche)
+grafoMañana, grafoTarde, grafoNoche = generaSecuencias(carpeta_base, carpeta_base_aux, secuenciaMañana, secuenciaTarde, secuenciaNoche)
    
 generaAutomataActividades(dictAct, dictSec)
 
@@ -577,9 +582,11 @@ for key, value in dictSec.items():
     dictRegex[key] = regex
     # print("\n")
     print("===================")
-
+print(dictRegex["Act24"])
 procesar_tests(carpeta_base, carpeta_base_aux)
 
 
-    
+    #re.griddy
+    #ocw teoria lenguajes formales tirnauca
+    #metodologia mas teorico
             
