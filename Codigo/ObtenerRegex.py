@@ -9,7 +9,7 @@ def dfa_to_regex_aux(dfa, start_state, final_states):
     
     # Add new start state
     G.add_node(new_start)
-    G.add_edge(new_start, start_state, label='ε')
+    G.add_edge(new_start, start_state, label='')
     
     # Add new final state
     G.add_node(new_final)
@@ -31,19 +31,19 @@ def dfa_to_regex_aux(dfa, start_state, final_states):
             outgoing.setdefault(v, []).append(data['label'])
         
         self_loops = [data['label'] for u, v, data in G.edges(state, data=True) if u == v]
-        loop_regex = f"({ '|'.join(self_loops) })*" if self_loops else ""
+        loop_regex = f"({ '|'.join(reversed(self_loops)) })*" if self_loops else ""
         
         for u, r1_list in incoming.items():
             for v, r2_list in outgoing.items():
-                combined_r1 = f"({'|'.join(r1_list)})" if len(r1_list) > 1 else r1_list[0]
-                combined_r2 = f"({'|'.join(r2_list)})" if len(r2_list) > 1 else r2_list[0]
+                combined_r1 = f"({'|'.join(reversed(r1_list))})" if len(r1_list) > 1 else r1_list[0]
+                combined_r2 = f"({'|'.join(reversed(r2_list))})" if len(r2_list) > 1 else r2_list[0]
                 new_label = f"{combined_r1}{loop_regex}{combined_r2}" if loop_regex else f"{combined_r1}{combined_r2}"
                 G.add_edge(u, v, label=new_label)
         
         G.remove_node(state)
     
     regex = [data['label'] for _, v, data in G.edges(new_start, data=True) if v == new_final]
-    return f"({'|'.join(regex)})" if len(regex) > 1 else regex[0] if regex else "∅"
+    return f"({'|'.join(reversed(regex))})" if len(regex) > 1 else regex[0] if regex else "∅"
 
 
 def dfa_to_regex(dfa, start_state, final_states):

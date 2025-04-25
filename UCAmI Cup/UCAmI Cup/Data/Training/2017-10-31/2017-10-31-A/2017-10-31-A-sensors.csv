@@ -1,16 +1,4 @@
 TIMESTAMP;OBJECT;STATE;HABITANT
-2017/10/31 11:08:55.0;SM4;Movement;Mario 
-2017/10/31 11:09:11.0;SM4;No movement;Mario 
-2017/10/31 11:09:31.0;C14;Pressure;Mario 
-2017/10/31 11:09:31.0;SM4;Movement;Mario 
-2017/10/31 11:09:32.0;C14;No Pressure;Mario 
-2017/10/31 11:09:41.0;C14;Pressure;Mario 
-2017/10/31 11:09:43.0;SM3;Movement;Mario 
-2017/10/31 11:09:53.0;SM3;No movement;Mario 
-2017/10/31 11:09:56.0;M01;Open;Mario 
-2017/10/31 11:10:06.0;SM4;No movement;Mario 
-2017/10/31 11:11:21.0;SM4;Movement;Mario 
-2017/10/31 11:11:21.0;M01;Close;Mario 
 2017/10/31 11:13:15.0;SM4;Movement;Mario 
 2017/10/31 11:13:40.0;SM4;No movement;Mario 
 2017/10/31 11:14:58.0;C14;Pressure;Mario 
