@@ -406,6 +406,10 @@ def obtenerActividadesPosibles(grafo_A_Mirar, actividadAnterior, actividadesAnte
             if 'label' in data
         ]
 
+        if not destinos_con_peso:
+            # Si no hay destinos, no se puede hacer nada
+            return []
+
         # print("Destinos con peso: ", destinos_con_peso)
 
         # Ordenar por peso
@@ -461,17 +465,19 @@ def obtenerActividadesDocumento(direccionDocumento):
         actividadesPosibles = obtenerActividadesPosibles(grafo_A_Mirar, actividadAnterior, actividadesAnteriores)
         sensoresString = "".join([x[0] for x in sensores])
         sensoresNoSMString = "".join([x[0] for x in sensoresNoSM])
-
+        matcheado = False
         for actividad in actividadesPosibles:
             expresionReg = dictRegex[actividad]
 
             match = re.search(expresionReg,sensoresString)
             matchNoSM = re.search(expresionReg,sensoresNoSMString)
-            matcheado = False
+            
             if matchNoSM:
+                ini = matchNoSM.start()
+                fi = matchNoSM.end()
                 inicio = matchNoSM.start()//3
-                fin = matchNoSM.end()//3 -1
-                if fin < 0:
+                fin = matchNoSM.end()//3
+                if fin <= 0:
                     fin = 0
                 
                 # print("¡Encontrado no sm!")
@@ -487,20 +493,22 @@ def obtenerActividadesDocumento(direccionDocumento):
                 # print("sensoresNoSM[fin]:", sensoresNoSM[fin])
                 # print("sensoresNoSM[fin][1]:", sensoresNoSM[fin][1])
                 # print("len(tiempos):", len(tiempos))
-                actividades.append((actividad, tiempos[sensoresNoSM[inicio][1]], tiempos[sensoresNoSM[fin][1]]))
+                
+                actividades.append((actividad, tiempos[sensoresNoSM[inicio][1]], tiempos[sensoresNoSM[fin-1][1]]))
                 # print("================")
                 # print("Actividad NO SM: ", actividad, "Tiempo Inicio: ", tiempos[sensores[inicio][1]], "Tiempo Fin: ", tiempos[sensores[fin][1]])
                 # print("================")
+                transicion = sensoresNoSM[fin-1][1]
                 sensoresNoSM = sensoresNoSM[fin:] # Actualizamos la lista de sensores a partir del último encontrado
-                sensores = [(sensor, i) for i, sensor in enumerate(sensoresBase) if i >= sensoresNoSM[0][1]] # Actualizamos la lista de sensores a partir del último encontrado
+                sensores = [(sensor, i) for i, sensor in enumerate(sensoresBase) if i >= transicion] # Actualizamos la lista de sensores a partir del último encontrado
                 actividadesAnteriores = actividadesPosibles.copy()
                 actividadAnterior = actividad
                 matcheado = True
             elif match:
                 inicio = match.start()//3
-                fin = match.end()//3 -1
+                fin = match.end()//3
                 # print("¡Encontrado!")
-                actividades.append((actividad, tiempos[sensores[inicio][1]], tiempos[sensores[fin][1]]))
+                actividades.append((actividad, tiempos[sensores[inicio][1]], tiempos[sensores[fin-1][1]]))
                 # print("================")
                 # print("Actividad: ", actividad, "Tiempo Inicio: ", tiempos[sensores[inicio][1]], "Tiempo Fin: ", tiempos[sensores[fin][1]])
                 # print("================")
