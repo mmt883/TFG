@@ -671,16 +671,26 @@ def redondear_a_30_segundos(fecha_hora):
 
     return redondeado
 
-def procesar_tests2(base_path, base_path_aux, pathTraining, pathTrainingEscribir):
+def procesar_tests2(base_path, base_path_aux, pathTraining, pathTrainingAux, pathTrainingEscribir, pathTrainingEscribirAux):
 
     # Comprobar si la carpeta base existe
     if not os.path.exists(base_path):
-        print(f"Error: La carpeta '{base_path}' no existe.")
+        #print(f"Error: La carpeta '{base_path}' no existe.")
         base_path = base_path_aux
 
         if not os.path.exists(base_path):
-            print(f"Error: La carpeta '{base_path}' no existe.")
+            #print(f"Error: La carpeta '{base_path}' no existe.")
             return
+        
+    # Comprobar si la carpeta base existe
+    if not os.path.exists(pathTraining):
+        #print(f"Error: La carpeta '{pathTraining}' no existe.")
+        pathTraining = pathTrainingAux
+        
+    # Comprobar si la carpeta base existe
+    if not os.path.exists(pathTrainingEscribir):
+        #print(f"Error: La carpeta '{pathTrainingEscribir}' no existe.")
+        pathTrainingEscribir = pathTrainingEscribirAux
 
     with open(pathTraining, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
@@ -769,7 +779,18 @@ def procesar_tests2(base_path, base_path_aux, pathTraining, pathTrainingEscribir
 
                     writer.writerow(salida)
 
-def obtenerMetricas(archivoBase, archivoMio):
+def obtenerMetricas(archivoBase, archivoBaseAux, archivoMio, archivoMioAux):
+    
+    # Comprobar si la carpeta base existe
+    if not os.path.exists(archivoBase):
+        #print(f"Error: La carpeta '{archivoBase}' no existe.")
+        archivoBase = archivoBaseAux
+        
+    # Comprobar si la carpeta base existe
+    if not os.path.exists(archivoMio):
+        #print(f"Error: La carpeta '{archivoMio}' no existe.")
+        archivoMio = archivoMioAux
+        
     actividadesCorrectas = 0
     actividadesTotales = 0
     horasCorrectas = 0
@@ -845,9 +866,13 @@ carpeta_base_aux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Trainin
 carpeta_base_test = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Test/"
 carpeta_base_test_aux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Test/"
 pathTraining = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slots training.csv"
+pathTrainingAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slots training.csv"
 pathTrainingEscribir = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slots training escribir.csv"
+pathTrainingEscribirAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slots training escribir.csv"
 pathTest = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/resultsComprobar.csv"
+pathTestAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/resultsComprobar.csv"
 pathTestEscribir = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/results.csv"
+pathTestEscribirAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/results.csv"
 
 
 dictAct = inicializarDict()
@@ -895,36 +920,39 @@ for key, value in dictSec.items():
     # print("\n")
     print("===================")
 # print(dictAct["Act15"])
-dictRegex['Act01'] = "(D04)+(C01|C05|D04|D05)*"
-dictRegex['Act02'] = "(D01|D02|D04|D10|H01)+"
-dictRegex['Act03'] = "(C04|D01|D02|D04|D08|D10)+"
-dictRegex['Act04'] = "(C04|D01|D02|D04|D08|D10)+"
-dictRegex['Act08'] = "(C02|D10)+"
-dictRegex['Act09'] = "(TV0|S09)*TV0"
-dictRegex['Act10'] = "(M01)+"
-dictRegex['Act11'] = "(TV0C07|C07TV0)(S09)*(TV0C07|C07TV0)"
-dictRegex['Act13'] = "(M01)+"
-dictRegex['Act14'] = "(M01)+"
-dictRegex['Act15'] = "(C01|C08)*(M01)+"
-dictRegex['Act16'] = "(C09)+"
-dictRegex['Act17'] = "(C09)+"
-dictRegex['Act18'] = "(C10|D07)+(C08|C10|D07)*"
-dictRegex['Act19'] = "(D05)+"
-dictRegex['Act20'] = "D09(C12|D09)*"
-dictRegex['Act22'] = "D03(C12|C13|D03)*"
-dictRegex['Act23'] = "C14(C13|C14)+"
-dictRegex['Act24'] = "(C14)+"
-dictRegex['Act05'] = "(SM1)+"
-dictRegex['Act06'] = "(SM1)+"
-dictRegex['Act07'] = "(SM1)+"
-dictRegex['Act12'] = "(S09|SM4|SM5)*SM5(S09|SM4|SM5)*"
-dictRegex['Act21'] = "(SM4)+"
+# dictRegex['Act01'] = "(D04)+(C01|C05|D04|D05)*"
+# dictRegex['Act02'] = "(D01|D02|D04|D10|H01)+"
+# dictRegex['Act03'] = "(C04|D01|D02|D04|D08|D10)+"
+# dictRegex['Act04'] = "(C04|D01|D02|D04|D08|D10)+"
+# dictRegex['Act08'] = "(C02|D10)+"
+# dictRegex['Act09'] = "(TV0|S09)*TV0"
+# dictRegex['Act10'] = "(M01)+"
+# dictRegex['Act11'] = "(TV0C07|C07TV0)(S09)*(TV0C07|C07TV0)"
+# dictRegex['Act13'] = "(M01)+"
+# dictRegex['Act14'] = "(M01)+"
+# dictRegex['Act15'] = "(C01|C08)*(M01)+"
+# dictRegex['Act16'] = "(C09)+"
+# dictRegex['Act17'] = "(C09)+"
+# dictRegex['Act18'] = "(C10|D07)+(C08|C10|D07)*"
+# dictRegex['Act19'] = "(D05)+"
+# dictRegex['Act20'] = "D09(C12|D09)*"
+# dictRegex['Act22'] = "D03(C12|C13|D03)*"
+# dictRegex['Act23'] = "C14(C13|C14)+"
+# dictRegex['Act24'] = "(C14)+"
+# dictRegex['Act05'] = "(SM1)+"
+# dictRegex['Act06'] = "(SM1)+"
+# dictRegex['Act07'] = "(SM1)+"
+# dictRegex['Act12'] = "(S09|SM4|SM5)*SM5(S09|SM4|SM5)*"
+# dictRegex['Act21'] = "(SM4)+"
+for key, value in dictRegex.items():
+    print(f"{key}: {value}")
+    print("\n")
 
 # procesar_tests(carpeta_base2, carpeta_base_aux)
-procesar_tests2(carpeta_base, carpeta_base_aux, pathTraining, pathTrainingEscribir)
-obtenerMetricas(pathTraining, pathTrainingEscribir)
-procesar_tests2(carpeta_base_test, carpeta_base_test_aux, pathTest, pathTestEscribir)
-obtenerMetricas(pathTest, pathTestEscribir)
+# procesar_tests2(carpeta_base, carpeta_base_aux, pathTraining, pathTrainingAux, pathTrainingEscribir, pathTrainingEscribirAux)
+# obtenerMetricas(pathTraining, pathTrainingAux, pathTrainingEscribir, pathTrainingEscribirAux)
+# procesar_tests2(carpeta_base_test, carpeta_base_test_aux, pathTest, pathTestAux, pathTestEscribir, pathTestEscribirAux)
+# obtenerMetricas(pathTest, pathTestAux, pathTestEscribir, pathTestEscribirAux)
 #ACTUAL
 
 
