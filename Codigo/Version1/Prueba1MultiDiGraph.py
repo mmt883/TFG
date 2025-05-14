@@ -388,8 +388,7 @@ def obtenerActividadesPosibles(grafo_A_Mirar, actividadAnterior, actividadesAnte
 
     actividadesPosibles = []
     PosiblesEnCualquierMomento = ["Act11", "Act09", "Act14", "Act18", "Act12"]
-    #if actividadAnterior in PosiblesEnCualquierMomento and not any(actividad in grafo_A_Mirar.nodes() for actividad in PosiblesEnCualquierMomento):
-    if actividadAnterior in PosiblesEnCualquierMomento and actividadesAnteriores.index(actividadAnterior) > actividadesAnteriores.index("Act11"):
+    if actividadAnterior in PosiblesEnCualquierMomento and not any(actividad in grafo_A_Mirar.nodes() for actividad in PosiblesEnCualquierMomento):
         actividadesAnteriores.insert(0, actividadAnterior)
         return actividadesAnteriores
     
@@ -406,10 +405,6 @@ def obtenerActividadesPosibles(grafo_A_Mirar, actividadAnterior, actividadesAnte
             for _, destino, key, data in grafo_A_Mirar.out_edges(actividadAnterior, keys=True, data=True)
             if 'label' in data
         ]
-
-        if not destinos_con_peso:
-            # Si no hay destinos, no se puede hacer nada
-            return []
 
         # print("Destinos con peso: ", destinos_con_peso)
 
@@ -466,35 +461,46 @@ def obtenerActividadesDocumento(direccionDocumento):
         actividadesPosibles = obtenerActividadesPosibles(grafo_A_Mirar, actividadAnterior, actividadesAnteriores)
         sensoresString = "".join([x[0] for x in sensores])
         sensoresNoSMString = "".join([x[0] for x in sensoresNoSM])
-        matcheado = False
+
         for actividad in actividadesPosibles:
             expresionReg = dictRegex[actividad]
 
             match = re.search(expresionReg,sensoresString)
             matchNoSM = re.search(expresionReg,sensoresNoSMString)
-            
+            matcheado = False
             if matchNoSM:
                 inicio = matchNoSM.start()//3
-                fin = matchNoSM.end()//3
-                if fin <= 0:
+                fin = matchNoSM.end()//3 -1
+                if fin < 0:
                     fin = 0
                 
-                
-                actividades.append((actividad, tiempos[sensoresNoSM[inicio][1]], tiempos[sensoresNoSM[fin-1][1]]))
+                # print("¡Encontrado no sm!")
+                # print("Match:", sensoresNoSMString[matchNoSM.start():matchNoSM.end()])
+                # print("Inicio:", inicio, "Fin:", fin)
+                # print(len(tiempos))
+                # print(len(sensoresNoSMString))
+                # print(matchNoSM.start(), matchNoSM.end())
+                # print(sensoresNoSM[inicio][1])
+
+
+                # print("Index fin:", fin)
+                # print("sensoresNoSM[fin]:", sensoresNoSM[fin])
+                # print("sensoresNoSM[fin][1]:", sensoresNoSM[fin][1])
+                # print("len(tiempos):", len(tiempos))
+                actividades.append((actividad, tiempos[sensoresNoSM[inicio][1]], tiempos[sensoresNoSM[fin][1]]))
                 # print("================")
                 # print("Actividad NO SM: ", actividad, "Tiempo Inicio: ", tiempos[sensores[inicio][1]], "Tiempo Fin: ", tiempos[sensores[fin][1]])
                 # print("================")
-                transicion = sensoresNoSM[fin-1][1]
                 sensoresNoSM = sensoresNoSM[fin:] # Actualizamos la lista de sensores a partir del último encontrado
-                sensores = [(sensor, i) for i, sensor in enumerate(sensoresBase) if i > transicion] # Actualizamos la lista de sensores a partir del último encontrado
+                sensores = [(sensor, i) for i, sensor in enumerate(sensoresBase) if i >= sensoresNoSM[0][1]] # Actualizamos la lista de sensores a partir del último encontrado
                 actividadesAnteriores = actividadesPosibles.copy()
                 actividadAnterior = actividad
                 matcheado = True
             elif match:
                 inicio = match.start()//3
-                fin = match.end()//3
+                fin = match.end()//3 -1
                 # print("¡Encontrado!")
-                actividades.append((actividad, tiempos[sensores[inicio][1]], tiempos[sensores[fin-1][1]]))
+                actividades.append((actividad, tiempos[sensores[inicio][1]], tiempos[sensores[fin][1]]))
                 # print("================")
                 # print("Actividad: ", actividad, "Tiempo Inicio: ", tiempos[sensores[inicio][1]], "Tiempo Fin: ", tiempos[sensores[fin][1]])
                 # print("================")
@@ -511,24 +517,91 @@ def obtenerActividadesDocumento(direccionDocumento):
                 break
                 
         if not matcheado:
-            if len(sensores) == 0:
-                # Si no hay más sensores, salimos del bucle
-                # print("No hay más sensores")
-                FIN = True
-            
-            if actividadesPosibles == []:
-                # Si no hay actividades posibles, salimos del bucle
-                # print("No hay actividades posibles")
-                FIN = True
-            else:
-                if len(sensores) > len(sensoresNoSM):
-                    #Quitamos el primer sensor de la lista sensores
-                    sensores = sensores[1:]
-                else:
-                    #Quitamos el primer sensor de la lista sensoresNoSM
-                    sensoresNoSM = sensoresNoSM[1:]
-                    sensores = sensores[1:]
+            FIN = True
 
+                #     if matchNoSM:
+            #     inicio = matchNoSM.start()//3
+            #     fin = matchNoSM.end()//3
+            #     i = inicio
+            #     # print("¡Encontrado no sm!")
+            #     # print("Match:", sensoresNoSMString[matchNoSM.start():matchNoSM.end()])
+            #     # print(len(tiempos))
+            #     # print(len(sensoresNoSMString))
+            #     # print(matchNoSM.start(), matchNoSM.end())
+            #     # print(sensoresNoSM[inicio][1])
+            #     tipo = "No SM"
+                
+            #     # print("Actividad NO SM: ", actividad, "Tiempo Inicio: ", tiempos[sensores[inicio][1]], "Tiempo Fin: ", tiempos[sensores[fin][1]])
+
+            # elif match:
+            #     inicio = match.start()//3
+            #     fin = match.end()//3
+            #     i = inicio
+            #     # print("¡Encontrado!")
+            #     # print("Actividad: ", actividad, "Tiempo Inicio: ", tiempos[sensores[inicio][1]], "Tiempo Fin: ", tiempos[sensores[fin][1]])
+            #     # print("Sensores: ", sensores[inicio][0], " ", sensores[fin][0])
+            #     tipo = "SM"
+                
+                
+            
+            # if i < iMinimo:
+            #     iMinimo = i
+            #     inicioGuardar = inicio
+            #     finGuardar = fin
+            #     actividadGuardar = actividad
+            #     actividades.append((actividadGuardar, tiempos[sensores[inicioGuardar][1]], tiempos[sensores[finGuardar][1]]))
+            #     if tipo == "SM":
+            #         sensores = sensores[fin:] # Actualizamos la lista de sensores a partir del último encontrado
+            #         sensoresNoSM = [(sensor, i) for sensor, i in sensores if not es_sensor_SM(sensor)]
+            #     else:
+            #         sensoresNoSM = sensoresNoSM[fin:] # Actualizamos la lista de sensores a partir del último encontrado
+            #         sensores = [(sensor, i) for i, sensor in enumerate(sensoresBase) if i >= sensoresNoSM[0][1]] # Actualizamos la lista de sensores a partir del último encontrado
+
+            #     actividadesAnteriores = actividadesPosibles.copy()
+            #     actividadAnterior = actividad
+            #     print("Actividad: ", actividadGuardar, "Tiempo Inicio: ", tiempos[sensores[inicioGuardar][1]], "Tiempo Fin: ", tiempos[sensores[finGuardar][1]])
+    
+    # for i in range(len(sensores)):
+    #     regexSensor = regexSensor + sensores[i]
+    #     if not es_sensor_SM(sensores[i]):
+    #         regexSensorNoSM = regexSensorNoSM + sensores[i]
+    #         if tiempoInicialNoSM is None:
+    #             tiempoInicialNoSM = tiempos[i]
+    #     if tiempoInicial is None:
+    #         tiempoInicial = tiempos[i]
+    #         actividadesPosibles = obtenerActividadesPosibles(grafo_A_Mirar, actividadAnterior, actividadesAnteriores)
+        
+    #     tiempoFinal = tiempos[i]
+    #     print(regexSensor, regexSensorNoSM, actividadesPosibles)
+    #     for actividad in actividadesPosibles:
+    #         print(actividad)
+    #         if re.match(dictRegex[actividad], regexSensor):
+    #             print("HA MATCHEADO CON SM")
+    #             print(actividad, tiempoInicialNoSM, tiempoFinal)
+    #             actividades.append((actividad, tiempoInicial, tiempoFinal))
+    #             actividadAnterior = actividad
+
+    #             actividadesAnteriores = actividadesPosibles.copy()
+    #             tiempoInicial = None
+    #             tiempoInicialNoSM = None
+    #             tiempoFinal = None
+    #             regexSensor = ""
+    #             regexSensorNoSM = ""
+    #             break
+
+    #         if re.match(dictRegex[actividad], regexSensorNoSM):
+    #             print("HA MATCHEADO SIN SM")
+    #             print(actividad, tiempoInicialNoSM, tiempoFinal)
+    #             actividades.append((actividad, tiempoInicialNoSM, tiempoFinal))
+    #             actividadAnterior = actividad
+
+    #             actividadesAnteriores = actividadesPosibles.copy()
+    #             tiempoInicial = None
+    #             tiempoInicialNoSM = None
+    #             tiempoFinal = None
+    #             regexSensor = ""
+    #             regexSensorNoSM = ""
+    #             break
     return actividades
             
 def procesar_tests(base_path, base_path_aux):
@@ -590,26 +663,16 @@ def redondear_a_30_segundos(fecha_hora):
 
     return redondeado
 
-def procesar_tests2(base_path, base_path_aux, pathTraining, pathTrainingAux, pathTrainingEscribir, pathTrainingEscribirAux):
+def procesar_tests2(base_path, base_path_aux, pathTraining, pathTrainingEscribir):
 
     # Comprobar si la carpeta base existe
     if not os.path.exists(base_path):
-        #print(f"Error: La carpeta '{base_path}' no existe.")
+        print(f"Error: La carpeta '{base_path}' no existe.")
         base_path = base_path_aux
 
         if not os.path.exists(base_path):
-            #print(f"Error: La carpeta '{base_path}' no existe.")
+            print(f"Error: La carpeta '{base_path}' no existe.")
             return
-        
-    # Comprobar si la carpeta base existe
-    if not os.path.exists(pathTraining):
-        #print(f"Error: La carpeta '{pathTraining}' no existe.")
-        pathTraining = pathTrainingAux
-        
-    # Comprobar si la carpeta base existe
-    if not os.path.exists(pathTrainingEscribir):
-        #print(f"Error: La carpeta '{pathTrainingEscribir}' no existe.")
-        pathTrainingEscribir = pathTrainingEscribirAux
 
     with open(pathTraining, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
@@ -698,18 +761,7 @@ def procesar_tests2(base_path, base_path_aux, pathTraining, pathTrainingAux, pat
 
                     writer.writerow(salida)
 
-def obtenerMetricas(archivoBase, archivoBaseAux, archivoMio, archivoMioAux):
-    
-    # Comprobar si la carpeta base existe
-    if not os.path.exists(archivoBase):
-        #print(f"Error: La carpeta '{archivoBase}' no existe.")
-        archivoBase = archivoBaseAux
-        
-    # Comprobar si la carpeta base existe
-    if not os.path.exists(archivoMio):
-        #print(f"Error: La carpeta '{archivoMio}' no existe.")
-        archivoMio = archivoMioAux
-        
+def obtenerMetricas(archivoBase, archivoMio):
     actividadesCorrectas = 0
     actividadesTotales = 0
     horasCorrectas = 0
@@ -773,115 +825,6 @@ def obtenerMetricas(archivoBase, archivoBaseAux, archivoMio, archivoMioAux):
     print("Porcentaje de actividades correctas: ", actividadesCorrectas/actividadesTotales*100, "%")
     print("Porcentaje de horas correctas: ", horasCorrectas/horasTotales*100, "%")
 
-def hacerColumnaLateral(pathTraining, pathTrainingAux, pathTrainingNuevo, pathTrainingNuevoAux):
-    # Comprobar si la carpeta base existe
-    if not os.path.isdir(os.path.dirname(pathTraining)):
-        #print(f"Error: La carpeta '{pathTraining}' no existe.")
-        pathTraining = pathTrainingAux
-        
-    # Comprobar si la carpeta base existe
-    if not os.path.isdir(os.path.dirname(pathTrainingNuevo)):
-        #print(f"Error: La carpeta '{pathTrainingNuevo}' no existe.")
-        pathTrainingNuevo = pathTrainingNuevoAux
-
-    with open(pathTraining, newline='', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        
-        with open(pathTrainingNuevo, mode='w', newline='', encoding='utf-8') as outcsv:
-            writer = csv.writer(outcsv, delimiter=';')
-            
-
-            for row in reader:
-                filename = row[0]
-                elementos = filename.split(";")
-                # print("Filename: ", filename)
-                if elementos[0] == "":
-                    writer.writerow([""])
-                    continue
-                if "activity" in elementos[0]:
-                    filename = filename.replace(";", "")
-                    writer.writerow([filename])
-                    continue
-                    
-                    
-                if "Timestamp" in elementos[0]:
-                    writer.writerow(["Inicio"])
-                    actividades = filename.split(";")[1:]
-                    continue
-
-                if ":" in elementos[0]:
-                    escribir = []
-                    escribir.append(elementos[0])
-                    actividadAEscribir = []
-                    if "results" in pathTraining:
-                        verdadero = "VERDADERO"
-                        falso = "FALSO"
-                    else:
-                        verdadero = "TRUE"
-                        falso = "FALSE"
-                    
-                    for i in range(len(actividades)):
-                        if elementos[i+1] == verdadero:
-                            #actividadAEscribir.append(actividades[i]) si hay varuas actividades
-                            actividadAEscribir = actividades[i]
-                            break
-                    if not verdadero in elementos:
-                        actividadAEscribir = "Ninguna"
-
-                    escribir.append(actividadAEscribir)
-                    writer.writerow(escribir)
-                    continue
-
-def obtenerMetricas2(archivoBase, archivoBaseAux, archivoMio, archivoMioAux):
-    
-     # Comprobar si la carpeta base existe
-    if not os.path.isdir(os.path.dirname(archivoBase)):
-        #print(f"Error: La carpeta '{pathTraining}' no existe.")
-        archivoBase = archivoBaseAux
-        
-    # Comprobar si la carpeta base existe
-    if not os.path.isdir(os.path.dirname(archivoMio)):
-        #print(f"Error: La carpeta '{pathTrainingNuevo}' no existe.")
-        archivoMio = archivoMioAux
-
-    actividadesCorrectas = 0
-    actividadesTotales = 0
-
-
-    with open(archivoBase, newline='', encoding='utf-8') as csvfile:
-        reader = list(csv.reader(csvfile))
-
-        with open(archivoMio, newline='', encoding='utf-8') as csvfile2:
-            reader2 = list(csv.reader(csvfile2))
-
-            for i, row in enumerate(reader):
-                filename = row[0]
-                elementos = filename.split(";")
-                filename2 = reader2[i][0]
-                elementos2 = filename2.split(";")
-                
-
-                if elementos[0] == "":
-                    continue
-                if "activity" in elementos[0]:
-                    continue
-                if "Inicio" in elementos[0]:
-                    continue
-                if ":" in elementos[0]:
-                    datos1 = elementos[1]
-                    datos2 = elementos2[1]
-                    
-                    actividadesTotales += 1
-                    if datos1 == datos2:
-                        actividadesCorrectas += 1
-
-    print("Actividades correctas: ", actividadesCorrectas, "Actividades totales: ", actividadesTotales)
-    print("Porcentaje de actividades correctas: ", actividadesCorrectas/actividadesTotales*100, "%")
-                
-
-    
-                   
-
 
     
                 
@@ -893,30 +836,10 @@ carpeta_base2 = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training
 carpeta_base_aux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Training/"
 carpeta_base_test = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Test/"
 carpeta_base_test_aux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/Data/Test/"
-
 pathTraining = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slots training.csv"
-pathTrainingAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slots training.csv"
-
-pathTrainingNuevo = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slotstrainingnuevo.csv"
-pathTrainingNuevoAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slotstrainingnuevo.csv"
-
 pathTrainingEscribir = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slots training escribir.csv"
-pathTrainingEscribirAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slots training escribir.csv"
-
-pathTrainingEscribirNuevo = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slots training escribir nuevo.csv"
-pathTrainingEscribirNuevoAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/time-slots training escribir nuevo.csv"
-
 pathTest = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/resultsComprobar.csv"
-pathTestAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/resultsComprobar.csv"
-
-pathTestNuevo = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/resultsComprobarNuevo.csv"
-pathTestNuevoAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/resultsComprobarNuevo.csv"
-
 pathTestEscribir = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/results.csv"
-pathTestEscribirAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/results.csv"
-
-pathTestEscribirNuevo = r"C:/Users/Usuario/Desktop/TFG/UCAmI Cup/UCAmI Cup/results nuevo.csv"
-pathTestEscribirNuevoAux = r"C:/Users/jesme/Desktop/TFG/UCAmI Cup/UCAmI Cup/results nuevo.csv"
 
 
 dictAct = inicializarDict()
@@ -964,48 +887,36 @@ for key, value in dictSec.items():
     # print("\n")
     print("===================")
 # print(dictAct["Act15"])
+dictRegex['Act01'] = "(D04)+(C01|C05|D04|D05)*"
+dictRegex['Act02'] = "(D01|D02|D04|D10|H01)+"
+dictRegex['Act03'] = "(C04|D01|D02|D04|D08|D10)+"
+dictRegex['Act04'] = "(C04|D01|D02|D04|D08|D10)+"
+dictRegex['Act08'] = "(C02|D10)+"
+dictRegex['Act09'] = "(TV0|S09)*TV0"
+dictRegex['Act10'] = "(M01)+"
+dictRegex['Act11'] = "(TV0C07|C07TV0)(S09)*(TV0C07|C07TV0)"
+dictRegex['Act13'] = "(M01)+"
+dictRegex['Act14'] = "(M01)+"
+dictRegex['Act15'] = "(C01|C08)*(M01)+"
+dictRegex['Act16'] = "(C09)+"
+dictRegex['Act17'] = "(C09)+"
+dictRegex['Act18'] = "(C10|D07)+(C08|C10|D07)*"
+dictRegex['Act19'] = "(D05)+"
+dictRegex['Act20'] = "D09(C12|D09)*"
+dictRegex['Act22'] = "D03(C12|C13|D03)*"
+dictRegex['Act23'] = "C14(C13|C14)+"
+dictRegex['Act24'] = "(C14)+"
+dictRegex['Act05'] = "(SM1)+"
+dictRegex['Act06'] = "(SM1)+"
+dictRegex['Act07'] = "(SM1)+"
+dictRegex['Act12'] = "(S09|SM4|SM5)*SM5(S09|SM4|SM5)*"
+dictRegex['Act21'] = "(SM4)+"
 
-dictRegex['Act01'] = "^(D04)+(C01|C05|D04|D05)*"
-#dictRegex['Act01'] = "^(D04)+(C01|C05|D05)*"
-dictRegex['Act02'] = "^(D01|D02|D04|D10|H01)+"
-dictRegex['Act03'] = "^(C04|D01|D02|D04|D08|D10)+"
-dictRegex['Act04'] = "^(C04|D01|D02|D04|D08|D10)+"
-#dictRegex['Act04'] = "^(C04|D01|D02|D08|D10)+"
-dictRegex['Act08'] = "^(C02|D10)+"
-dictRegex['Act09'] = "^(TV0|S09)*TV0"
-dictRegex['Act10'] = "^(M01)+"
-dictRegex['Act11'] = "^(TV0C07|C07TV0)(S09)*(TV0C07|C07TV0)"
-dictRegex['Act13'] = "^(M01)+"
-dictRegex['Act14'] = "^(M01)+"
-dictRegex['Act15'] = "^(C01|C08)*(M01)+"
-dictRegex['Act16'] = "^(C09)+"
-dictRegex['Act17'] = "^(C09)+"
-dictRegex['Act18'] = "^(C10|D07)+(C08|C10|D07)*"
-dictRegex['Act19'] = "^(D05)+"
-dictRegex['Act20'] = "^D09(C12|D09)*"
-dictRegex['Act22'] = "^D03(C12|C13|D03)*"
-dictRegex['Act23'] = "^C14(C13|C14)+"
-dictRegex['Act24'] = "^(C14)+"
-dictRegex['Act05'] = "^(SM1)+"
-dictRegex['Act06'] = "^(SM1)+"
-dictRegex['Act07'] = "^(SM1)+"
-dictRegex['Act12'] = "^(S09|SM4|SM5)*SM5(S09|SM4|SM5)*"
-dictRegex['Act21'] = "^(SM4)+"
-
-
-print("TRAINING")
-procesar_tests2(carpeta_base, carpeta_base_aux, pathTraining, pathTrainingAux, pathTrainingEscribir, pathTrainingEscribirAux)
-hacerColumnaLateral(pathTraining, pathTrainingAux, pathTrainingNuevo, pathTrainingNuevoAux)
-hacerColumnaLateral(pathTrainingEscribir, pathTrainingEscribirAux, pathTrainingEscribirNuevo, pathTrainingEscribirNuevoAux)
-obtenerMetricas2(pathTrainingNuevo, pathTrainingNuevoAux, pathTrainingEscribirNuevo, pathTrainingEscribirNuevoAux)
-print("TEST")
-procesar_tests2(carpeta_base_test, carpeta_base_test_aux, pathTest, pathTestAux, pathTestEscribir, pathTestEscribirAux)
-hacerColumnaLateral(pathTest, pathTestAux, pathTestNuevo, pathTestNuevoAux)
-hacerColumnaLateral(pathTestEscribir, pathTestEscribirAux, pathTestEscribirNuevo, pathTestEscribirNuevoAux)
-obtenerMetricas2(pathTestNuevo, pathTestNuevoAux, pathTestEscribirNuevo, pathTestEscribirNuevoAux)
-
-# hacerColumnaLateral(pathTest, pathTestAux, pathTestEscribir, pathTestEscribirAux)
-# obtenerMetricas(pathTest, pathTestAux, pathTestEscribir, pathTestEscribirAux)
+# procesar_tests(carpeta_base2, carpeta_base_aux)
+procesar_tests2(carpeta_base, carpeta_base_aux, pathTraining, pathTrainingEscribir)
+obtenerMetricas(pathTraining, pathTrainingEscribir)
+procesar_tests2(carpeta_base_test, carpeta_base_test_aux, pathTest, pathTestEscribir)
+obtenerMetricas(pathTest, pathTestEscribir)
 #ACTUAL
 
 
