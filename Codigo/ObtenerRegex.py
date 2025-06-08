@@ -54,6 +54,8 @@ def dfa_to_regex(dfa, start_state, final_states):
     # Elimina ε si no está seguido por |
     filtered_out = re.sub(r'ε(?!\|)', '', out)
 
+    filtered_out = "^(" + filtered_out + ")"
+
     return filtered_out
 
 if re.match("SM1SM1SM1", "SM1SM1"):

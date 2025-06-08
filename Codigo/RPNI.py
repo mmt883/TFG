@@ -1,5 +1,74 @@
 import networkx as nx
 from collections import Counter
+import matplotlib.pyplot as plt
+
+from SecuenciasAutomatas import construir_automata_actividades
+
+def  es_sensor_SM(sensor):
+    """
+    Verifica si un sensor es del tipo 'SM'.
+    
+    :param sensor: Nombre del sensor.
+    :return: True si el sensor empieza por 'SM', False en caso contrario.
+    """
+    return sensor.startswith("SM")
+
+def generaAutomataActividades(dictAct, dictSec):
+    """
+    Genera un autómata para cada actividad, eliminando los sensores que empiezan por 'SM' si es posible.
+
+    :param dictAct: Diccionario con las listas de sensores de cada actividad.
+    :param dictSec: Diccionario que recogerá un automata con los sensores de cada actividad.
+    """
+
+    for key, value in dictAct.items():
+        # print(f"Procesando actividad: {key}")
+
+        # Verificar si todas las listas tienen al menos un sensor que no empieza por "SM"
+        existe_sensor_no_sm = all(
+            any(not es_sensor_SM(sensor) for sensor in lista) for lista in value
+        )
+
+        if existe_sensor_no_sm:
+            # Si hay algún sensor distinto de "SM...", eliminamos todos los "SM..."
+            sensores_a_eliminar = {sensor for lista in value for sensor in lista if es_sensor_SM(sensor)}
+
+            # Guardamos los sensores eliminados en dictSec
+            dictSec[key] = list(sensores_a_eliminar)
+
+            # Eliminamos sensores SM de cada sublista en dictAct
+            value2 = []
+            for lista in value:
+                lista2 = lista.copy()
+                lista2[:] = [sensor for sensor in lista2 if sensor not in sensores_a_eliminar]
+                value2.append(lista2)
+        else:
+            # Si todos los sensores son "SM...", no eliminamos nada
+            value2 = value.copy()
+            
+        dictSec[key] = construir_automata_actividades(value2)  # No se eliminó ningún sensor
+
+
+
+
+
+def pintar_multigrafo(grafoNuevo):
+    plt.figure(figsize=(6, 4))
+    pos = nx.spring_layout(grafoNuevo)  # Posiciones de los nodos
+    # Colores de los nodos según su etiqueta
+    node_colors = [
+        'green' if grafoNuevo.nodes[node].get('label') in ['Inicial', 'Positivo']
+        else 'red' if grafoNuevo.nodes[node].get('label') == 'Final'
+        else 'lightgray'
+        for node in grafoNuevo.nodes
+    ]
+    nx.draw(grafoNuevo, pos, with_labels=True, node_color=node_colors, edge_color='gray', node_size=2000, font_size=12)
+
+    # Dibujar los labels de las aristas
+    edge_labels = {(u, v, k): d["label"] for u, v, k, d in grafoNuevo.edges(keys=True, data=True) if "label" in d}
+    nx.draw_networkx_edge_labels(grafoNuevo, pos, edge_labels=edge_labels, font_color='red')
+
+    plt.show()
 
 
 def extraerNodosOrdenados(grafo):
