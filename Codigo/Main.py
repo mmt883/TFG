@@ -58,6 +58,7 @@ hacerColumnaLateral(pathTraining, pathTrainingNuevo)
 hacerColumnaLateral(pathTrainingEscribir, pathTrainingEscribirNuevo)
 obtenerMetricas(pathTrainingNuevo, pathTrainingEscribirNuevo)
 
+print("Para las expresiones regulares de los ganadores")
 # Para las expresiones regulares de los ganadores, se pueden usar las siguientes líneas:
 dictRegex['Act01'] = "^(D04)+(C01|C05|D04|D05)*"
 dictRegex['Act02'] = "^(D01|D02|D04|D10|H01)+"

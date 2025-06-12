@@ -81,7 +81,7 @@ def procesar_tests(base_path, pathTraining, pathTrainingEscribir, grafoMañana, 
                     if rutaArchivo == "":
                         print(filename)
                     actividades = obtenerActividadesDocumento(rutaArchivo, grafoMañana, grafoTarde, grafoNoche, dictRegex)
-                if "Timestamp" in filename:
+                if "Time" in filename:
                     
                     nombresActividades = []
                     for actividad in actividades:
@@ -155,7 +155,7 @@ def hacerColumnaLateral(pathTraining, pathTrainingNuevo):
                     continue
                     
                     
-                if "Timestamp" in elementos[0]:
+                if "Time" in elementos[0]:
                     writer.writerow(["Inicio"])
                     actividades = filename.split(";")[1:]
                     continue
@@ -280,7 +280,7 @@ def obtenerMetricas(archivoBase, archivoMio):
         print("Actividad:", key, "Distancia:", value2[0], "Longitud:", value2[1], "Normalizada:", value)
         distanciasNorm.append(value)
         distanciaTotal += value2[0]
-    print("Media distancias normalizadas: ", sum(distanciasNorm)/secuencias, "%")
+    print("Media distancias normalizadas: ", sum(distanciasNorm)/secuencias)
     print("Distancia total: ", distanciaTotal, "Distancia media: ", distanciaTotal/secuencias)
     print("Actividades correctas: ", actividadesCorrectas, "Actividades totales: ", actividadesTotales)
     print("Porcentaje de actividades correctas: ", actividadesCorrectas/actividadesTotales*100, "%")
